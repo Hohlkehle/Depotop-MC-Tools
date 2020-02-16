@@ -1,0 +1,51 @@
+﻿<Window x:Class="Depotop_MC_Tools.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Depotop_MC_Tools"
+        mc:Ignorable="d"
+        Title="Depotop Tools" Height="451.027" Width="652.118">
+    <Grid>
+        <TabControl Margin="0">
+            <TabItem Header="Titles">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="313*"/>
+                        <ColumnDefinition Width="335*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="76*" />
+                        <RowDefinition Height="277*"/>
+                        <RowDefinition Height="39*"/>
+                    </Grid.RowDefinitions>
+                    <GroupBox Header="Укажите заголовки" HorizontalAlignment="Left" Height="66" Margin="10,10,0,0" 
+                              VerticalAlignment="Top" Width="628" Grid.ColumnSpan="2">
+                        <TextBox x:Name="TbInputTitles" HorizontalAlignment="Left" Height="23" Margin="10,10,-2,0" TextWrapping="Wrap" Text="FR; EN; RU; DE; IT" 
+                                 VerticalAlignment="Top" Width="608"/>
+                    </GroupBox>
+                    <GroupBox Header="Данные" HorizontalAlignment="Left" Height="253" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="293">
+                        <TextBox x:Name="TbInputData" HorizontalAlignment="Left" Height="216" Margin="10,10,-2,0"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                 Text="SKU;Title;OE" VerticalAlignment="Top" Width="273"/>
+
+                    </GroupBox>
+                    <GroupBox Header="Результат" HorizontalAlignment="Left" Height="253" Margin="10,10,0,0"
+                              Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Width="293">
+                        <TextBox x:Name="TbOutputData" HorizontalAlignment="Left" Height="216" Margin="10,10,-2,0"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                 Text="SKU;Title FR;Title EN;Title RU;Title DE;Title IT" VerticalAlignment="Top" Width="273"/>
+                    </GroupBox>
+                    <Button Content="Обработать" Grid.Column="1" HorizontalAlignment="Left" Margin="245,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+
+                </Grid>
+            </TabItem>
+            <TabItem Header="Image Extract">
+                <Grid Background="#FFE5E5E5"/>
+            </TabItem>
+        </TabControl>
+
+    </Grid>
+</Window>
