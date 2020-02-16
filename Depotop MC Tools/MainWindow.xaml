@@ -26,8 +26,8 @@
                     </GroupBox>
                     <GroupBox Header="Данные" HorizontalAlignment="Left" Height="253" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="293">
                         <TextBox x:Name="TbInputData" HorizontalAlignment="Left" Height="216" Margin="10,10,-2,0"
-                                 TextWrapping="Wrap" AcceptsReturn="True"
-                                 HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                 TextWrapping="NoWrap" AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                                  Text="SKU;Title;OE" VerticalAlignment="Top" Width="273"/>
 
                     </GroupBox>

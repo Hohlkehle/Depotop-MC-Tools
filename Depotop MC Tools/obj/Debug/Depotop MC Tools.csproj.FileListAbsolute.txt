@@ -12,3 +12,18 @@ D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop_MC_Tools.Pro
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csproj.GenerateResource.cache
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.exe
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.pdb
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Depotop MC Tools.exe.config
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Depotop MC Tools.exe
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Depotop MC Tools.pdb
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csprojAssemblyReference.cache
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\MainWindow.g.cs
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\App.g.cs
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools_MarkupCompile.cache
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools_MarkupCompile.lref
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\MainWindow.baml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.g.resources
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop_MC_Tools.Properties.Resources.resources
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csproj.GenerateResource.cache
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csproj.CoreCompileInputs.cache
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.exe
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.pdb
