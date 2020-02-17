@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -8,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
+using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -74,7 +76,10 @@ namespace Depotop_MC_Tools
         {
             InitializeComponent();
             Initialize();
+            InitializeImageExtract();
         }
+
+        #region Title Tratement
 
         private void Initialize()
         {
@@ -150,11 +155,26 @@ namespace Depotop_MC_Tools
         {
             var title = Titles[(int)lang].Trim();
             var auto = MarqueAuto(titleData.Auto);
-            var sides = TranslatePhrase(titleData.Sides, lang);
+            var sides = FormatSides(TranslatePhrase(titleData.Sides, lang));
             var pour = Translate("pour", lang);
             var refr = titleData.Oe;
-            var mainTitle = String.Format("{0} {1} {2} {3} | {4}", title, sides, pour, auto, refr);
+
+
+            var mainTitle = String.Format("{0}{1} {2} {3} | {4}", title, sides, pour, auto, refr);
             return mainTitle;
+        }
+
+        /// <summary>
+        /// Sides string with white space
+        /// </summary>
+        /// <param name="sides"></param>
+        /// <returns></returns>
+        private string FormatSides(string sides)
+        {
+            if (sides == string.Empty)
+                return "";
+
+            return String.Format("{0} ", sides);
         }
 
         private string Translate(string word, Langs lang)
@@ -193,7 +213,107 @@ namespace Depotop_MC_Tools
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ReadInputData();
+        }
+        #endregion
 
+
+        #region Image Extract
+
+        public string InboxFolder { get { return TbInboxFolder.Text; } set { TbInboxFolder.Text = value; } }
+        public string OutboxFolder { get { return TbOutboxFolder.Text; } set { TbOutboxFolder.Text = value; } }
+        public List<string> NoExistsPhotosNames;
+        private void InitializeImageExtract()
+        {
+            NoExistsPhotosNames = new List<string>();
+        }
+
+        private void BtnStartImageExtract_Click(object sender, RoutedEventArgs e)
+        {
+            NoExistsPhotosNames.Clear();
+            TbImgeExtractResult.Text = "";
+            var sku = TbImageExtractSku.Text;
+            var lines = sku.Split(new string[] { "\r\n" }, StringSplitOptions.None).ToList<string>();
+
+            if (lines.Count == 0)
+                return;
+
+            if (!Directory.Exists(OutboxFolder))
+            {
+                TbImgeExtractResult.Text = string.Format("Output directory not exists!");
+                return;
+            }
+
+            var fileEntries = Directory.GetFiles(InboxFolder);
+            var outputStr = "";
+            var copied = new HashSet<string>();
+
+            foreach (string f in fileEntries)
+            {
+                var file = System.IO.Path.GetFileNameWithoutExtension(f);
+                var fext = System.IO.Path.GetExtension(f);
+                var fileSku = file.Remove(file.Length - 2);
+                if (lines.Contains(fileSku))
+                {
+                    copied.Add(fileSku);
+                    outputStr += string.Format("Copying photos for {0}...\r\n", file);
+                    var destdir = System.IO.Path.Combine(OutboxFolder, System.IO.Path.GetFileName(f));
+                    if (!File.Exists(destdir))
+                        File.Copy(f, destdir);
+                }
+                else
+                {
+                    outputStr += string.Format("Photos for {0} is not exists!\r\n", file);
+                }
+            }
+
+            NoExistsPhotosNames = lines.Except(copied).ToList();
+            TbImgeExtractResult.Text = outputStr;
+        }
+
+        private void BtnSelectInboxFolder_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dialog = new FolderBrowserDialog())
+            {
+                if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                    return;
+
+                var path = dialog.SelectedPath;
+
+                if (!Directory.Exists(path))
+                    return;
+
+                InboxFolder = path;
+            }
+        }
+
+        private void BtnSelectOutboxFolder_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dialog = new FolderBrowserDialog())
+            {
+                if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                    return;
+
+                var path = dialog.SelectedPath;
+
+                if (!Directory.Exists(path))
+                    return;
+
+                OutboxFolder = path;
+            }
+        }
+        #endregion
+
+        private void BtnCopyErrorSku_Click(object sender, RoutedEventArgs e)
+        {
+            if (NoExistsPhotosNames.Count == 0)
+            {
+                TbImgeExtractResult.Text = "Нечего копировать!";
+            }
+            else
+            {
+                System.Windows.Clipboard.SetText(String.Join("\n", NoExistsPhotosNames.ToArray()));
+                System.Windows.MessageBox.Show("Скопировано в буфер обмена!");
+            }
         }
     }
 }

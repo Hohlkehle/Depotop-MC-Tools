@@ -24,7 +24,7 @@
                         <TextBox x:Name="TbInputTitles" HorizontalAlignment="Left" Height="23" Margin="10,10,-2,0" TextWrapping="Wrap" Text="FR; EN; RU; DE; IT" 
                                  VerticalAlignment="Top" Width="608"/>
                     </GroupBox>
-                    <GroupBox Header="Данные" HorizontalAlignment="Left" Height="253" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="293">
+                    <GroupBox Header="Данные" HorizontalAlignment="Left" Height="296" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="293" Grid.RowSpan="2">
                         <TextBox x:Name="TbInputData" HorizontalAlignment="Left" Height="216" Margin="10,10,-2,0"
                                  TextWrapping="NoWrap" AcceptsReturn="True"
                                  HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
@@ -43,7 +43,42 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Image Extract">
-                <Grid Background="#FFE5E5E5"/>
+                <Grid Background="#FFE5E5E5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="149*"/>
+                        <RowDefinition Height="204*"/>
+                        <RowDefinition Height="39*"/>
+                    </Grid.RowDefinitions>
+                    <GroupBox Header="Параметры" Grid.Row="0" HorizontalAlignment="Left" Height="152" Margin="10,10,0,0" VerticalAlignment="Top" Width="618" Grid.RowSpan="2">
+                        <Grid>
+                            <TextBox x:Name="TbInboxFolder" HorizontalAlignment="Left" Height="23" Margin="10,31,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Папка с исходными изображениями" VerticalAlignment="Top"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="10,59,0,0" TextWrapping="Wrap" Text="Папка отсортированных изображений" VerticalAlignment="Top"/>
+                            <TextBox x:Name="TbOutboxFolder" HorizontalAlignment="Left" Height="23" Margin="10,80,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="476"/>
+                            <Button x:Name="BtnSelectInboxFolder" Content="Выбрать" HorizontalAlignment="Left" Margin="521,34,0,0" VerticalAlignment="Top" Width="75" Click="BtnSelectInboxFolder_Click"/>
+                            <Button x:Name="BtnSelectOutboxFolder" Content="Выбрать" HorizontalAlignment="Left" Margin="521,83,0,0" VerticalAlignment="Top" Width="75" Click="BtnSelectOutboxFolder_Click"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Header="Данные" HorizontalAlignment="Left" Height="188" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="618">
+                        <Grid>
+                            <TextBox x:Name="TbImageExtractSku" Height="124" Margin="10,31,419,0"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                 Text="" VerticalAlignment="Top"/>
+                            <TextBox x:Name="TbImgeExtractResult" Height="124" Margin="192,31,10,0"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                 Text="" VerticalAlignment="Top"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Укажите имена файлов" VerticalAlignment="Top"/>
+                            <TextBlock HorizontalAlignment="Left" Margin="192,10,0,0" TextWrapping="Wrap" Text="Результат" VerticalAlignment="Top"/>
+                        </Grid>
+                    </GroupBox>
+                    <Button x:Name="BtnStartImageExtract" Content="Обработать" HorizontalAlignment="Left" Margin="553,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="75" Height="20" Click="BtnStartImageExtract_Click"/>
+                    <Button x:Name="BtnCopyErrorSku" Content="Скопировать" HorizontalAlignment="Left" Margin="473,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="75" Click="BtnCopyErrorSku_Click"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="Image Parser">
+                <Grid Background="#FFE5E5E5"></Grid>
             </TabItem>
         </TabControl>
 
