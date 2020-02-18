@@ -4,9 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Depotop_MC_Tools"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
         Title="Depotop Tools" Height="451.027" Width="652.118">
     <Grid>
+        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" >
+            <ContentControl />
+        </xctk:BusyIndicator>
         <TabControl Margin="0">
             <TabItem Header="Titles">
                 <Grid Background="#FFE5E5E5">
@@ -78,9 +82,38 @@
                 </Grid>
             </TabItem>
             <TabItem Header="Image Parser">
-                <Grid Background="#FFE5E5E5"></Grid>
+                <Grid Background="#FFE5E5E5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="85*"/>
+                        <RowDefinition Height="259*"/>
+                        <RowDefinition Height="48*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="191*"/>
+                        <ColumnDefinition Width="447*"/>
+                    </Grid.ColumnDefinitions>
+                    <GroupBox Header="GroupBox" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Height="372" Margin="10,10,0,0" VerticalAlignment="Top" Width="171" Grid.RowSpan="3">
+                        <Grid>
+                            <TextBox x:Name="TbImageParseSku" Height="329" Margin="0,10,0,0"
+                                 TextWrapping="Wrap" AcceptsReturn="True"
+                                 HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                                 Text="" VerticalAlignment="Top"/>
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox Grid.Column="1" Header="GroupBox" HorizontalAlignment="Left" Height="64" Margin="10,0,0,11" VerticalAlignment="Bottom" Width="427">
+                        <ComboBox Name="CbParserType" HorizontalAlignment="Left" Margin="10,10,0,-9" VerticalAlignment="Top" Width="401" Height="22">
+                            <ComboBoxItem Content="Amazon" />
+                            <ComboBoxItem Content="Ebay" />
+                            <ComboBoxItem Content="Febest" />
+                        </ComboBox>
+                    </GroupBox>
+                    <Image x:Name="ImagePreview" Grid.Column="1" HorizontalAlignment="Left" Height="239" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="427"/>
+                    <Button x:Name="BtnStartParce" Content="Start" Grid.Column="1" HorizontalAlignment="Left" Margin="362,10,0,0" Grid.Row="2" VerticalAlignment="Top" Width="75" Click="BtnStartParce_Click"/>
+                </Grid>
             </TabItem>
         </TabControl>
+
+
 
     </Grid>
 </Window>

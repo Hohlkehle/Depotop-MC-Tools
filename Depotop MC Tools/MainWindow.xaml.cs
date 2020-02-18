@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using HtmlAgilityPack;
+using static Depotop_MC_Tools.AmazonParser;
 
 namespace Depotop_MC_Tools
 {
@@ -77,6 +80,7 @@ namespace Depotop_MC_Tools
             InitializeComponent();
             Initialize();
             InitializeImageExtract();
+            InitializeImageParser();
         }
 
         #region Title Tratement
@@ -231,43 +235,58 @@ namespace Depotop_MC_Tools
         {
             NoExistsPhotosNames.Clear();
             TbImgeExtractResult.Text = "";
+            _busyIndicator.IsBusy = true;
             var sku = TbImageExtractSku.Text;
-            var lines = sku.Split(new string[] { "\r\n" }, StringSplitOptions.None).ToList<string>();
-
-            if (lines.Count == 0)
-                return;
-
-            if (!Directory.Exists(OutboxFolder))
+            var outDirectory = OutboxFolder;
+            var inputDirectory = InboxFolder;
+            Task.Factory.StartNew(() =>
             {
-                TbImgeExtractResult.Text = string.Format("Output directory not exists!");
-                return;
-            }
 
-            var fileEntries = Directory.GetFiles(InboxFolder);
-            var outputStr = "";
-            var copied = new HashSet<string>();
+                var lines = sku.Split(new string[] { "\r\n" }, StringSplitOptions.None).ToList<string>();
 
-            foreach (string f in fileEntries)
-            {
-                var file = System.IO.Path.GetFileNameWithoutExtension(f);
-                var fext = System.IO.Path.GetExtension(f);
-                var fileSku = file.Remove(file.Length - 2);
-                if (lines.Contains(fileSku))
+                if (lines.Count == 0)
+                    return;
+
+                if (!Directory.Exists(outDirectory))
                 {
-                    copied.Add(fileSku);
-                    outputStr += string.Format("Copying photos for {0}...\r\n", file);
-                    var destdir = System.IO.Path.Combine(OutboxFolder, System.IO.Path.GetFileName(f));
-                    if (!File.Exists(destdir))
-                        File.Copy(f, destdir);
-                }
-                else
-                {
-                    outputStr += string.Format("Photos for {0} is not exists!\r\n", file);
-                }
-            }
+                    Dispatcher.Invoke(() =>
+                    TbImgeExtractResult.Text = string.Format("Output directory not exists!"));
 
-            NoExistsPhotosNames = lines.Except(copied).ToList();
-            TbImgeExtractResult.Text = outputStr;
+                    return;
+                }
+
+                var fileEntries = Directory.GetFiles(inputDirectory);
+                var outputStr = "";
+                var copied = new HashSet<string>();
+
+                foreach (string f in fileEntries)
+                {
+                    var file = System.IO.Path.GetFileNameWithoutExtension(f);
+                    var fext = System.IO.Path.GetExtension(f);
+                    var fileSku = file.Remove(file.Length - 2);
+                    if (lines.Contains(fileSku))
+                    {
+                        copied.Add(fileSku);
+                        outputStr += string.Format("Copying photos for {0}...\r\n", file);
+                        var destdir = System.IO.Path.Combine(outDirectory, System.IO.Path.GetFileName(f));
+                        if (!File.Exists(destdir))
+                            File.Copy(f, destdir);
+                    }
+                    else
+                    {
+                        outputStr += string.Format("Photos for {0} is not exists!\r\n", file);
+                    }
+                }
+                Dispatcher.Invoke(() =>
+                    {
+                        NoExistsPhotosNames = lines.Except(copied).ToList();
+                        TbImgeExtractResult.Text = outputStr;
+                        _busyIndicator.IsBusy = false;
+                    });
+
+            });
+
+
         }
 
         private void BtnSelectInboxFolder_Click(object sender, RoutedEventArgs e)
@@ -301,7 +320,7 @@ namespace Depotop_MC_Tools
                 OutboxFolder = path;
             }
         }
-        #endregion
+
 
         private void BtnCopyErrorSku_Click(object sender, RoutedEventArgs e)
         {
@@ -315,5 +334,96 @@ namespace Depotop_MC_Tools
                 System.Windows.MessageBox.Show("Скопировано в буфер обмена!");
             }
         }
+
+        #endregion
+        #region Image Parser
+
+        private string m_SearchUrl = "https://www.amazon.com/s?k=";
+        private void InitializeImageParser()
+        {
+
+        }
+
+        private void BtnStartParce_Click(object sender, RoutedEventArgs e)
+        {
+            HtmlWeb web = new HtmlWeb()
+            {
+                AutoDetectEncoding = false,
+                OverrideEncoding = Encoding.UTF8
+            };
+
+            web.UseCookies = true;
+            web.UserAgent =
+                   "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
+            var htmlDoc = web.Load(m_SearchUrl + "71714472");
+
+            var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 's-result-item')]");
+            var m_ImageLink = new List<ImageLink>();
+            var amazonAnounces = new List<AmazonAnounce>();
+
+            if (nodes != null)
+            {
+                foreach (HtmlNode item in nodes)
+                {
+                    var postUrl = "";
+                    var postNode = item.SelectSingleNode(".//a[contains(@class, 'a-link-normal')]");
+                    if (postNode != null)
+                    {
+                        var pn = postNode.Attributes.FirstOrDefault(u => u.Name == "href");
+                        postUrl = pn.Value;
+                    }
+
+
+                    var iurlNode = item.SelectSingleNode(".//img/@src");
+                    if (iurlNode == null)
+                        continue;
+                    var src = iurlNode.Attributes.FirstOrDefault(u => u.Name == "src");
+
+                    var anounce = new AmazonAnounce(src.Value);
+                    anounce.ImageLinks.Add(new ImageLink(src.Value));
+                    amazonAnounces.Add(anounce);
+
+                    /*var iurl = src.Value;
+
+                    var pattern = @"([^/]+$)";
+                    var content = src.Value;
+                    var imgName = "";
+                    Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+                    Match match = rgx.Match(content);
+
+
+                    if (match.Success)
+                    {
+                        imgName = match.Value.Trim();
+                        m_ImageLink.Add(new ImageLink(content));
+                    }
+                    else
+                    {
+                        // error
+                    }
+
+                    */
+                    TbImageParseSku.Text += src.Value + "\n";
+                }
+            }
+
+            /*
+             [^/]+$
+
+            var rawHtml = htmlDoc.DocumentNode.OuterHtml;
+            var pattern = @"(avant|arriére|arriere|supérieur|superieur|inferieur|droite|gauche|longitudinal|transversal)";
+            var content = rawHtml;
+            MatchCollection matchList = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
+            var imageUrls = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
+
+            */
+
+            //if (node != null)
+            //   TbImageParseSku.Text = "Node Name: " + node.Name + "\n" + node.OuterHtml;
+        }
+
+        #endregion
+
+
     }
 }

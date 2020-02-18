@@ -27,3 +27,23 @@ U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\De
 U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csproj.CoreCompileInputs.cache
 U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.exe
 U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.pdb
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.Themes.Aero.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.Themes.Metro.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.Themes.VS2010.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.Toolkit.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\cs-CZ\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\de\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\es\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\fr\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\hu\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\it\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\pt-BR\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\ro\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\ru\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csproj.CopyComplete
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.pdb
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.xml
