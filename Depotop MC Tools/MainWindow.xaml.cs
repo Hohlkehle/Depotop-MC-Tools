@@ -337,16 +337,55 @@ namespace Depotop_MC_Tools
 
         #endregion
         #region Image Parser
-
+        public string ParserOutDir { get { return TbParserOutDir.Text; } set { TbParserOutDir.Text = value; } }
         private string m_SearchUrl = "https://www.amazon.com/s?k=";
         private void InitializeImageParser()
         {
 
+
+
+
+
+        }
+
+        private List<string[]> ParseInputData()
+        {
+            var text = TbImageParseSku.Text;
+            string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            //return lines.Where(x => !string.IsNullOrEmpty(x)).Distinct() .ToArray();
+            var input = new List<string[]>();
+            for (var i = 0; i < lines.Length; i++)
+            {
+                if (lines[i] == string.Empty)
+                    continue;
+
+                var items = lines[i].Split(new string[] { " " }, StringSplitOptions.None);
+                input.Add(items);
+
+            }
+            return input;
         }
 
         private void BtnStartParce_Click(object sender, RoutedEventArgs e)
         {
-            HtmlWeb web = new HtmlWeb()
+            var input = ParseInputData();
+            Parser m_AmazonParser = new AmazonParser(null);
+            m_AmazonParser.Initialize(/*HtmlWeb params*/);
+
+            foreach (var line in input)
+            {
+                var sku = line[0];
+                var oe = line[1];
+                m_AmazonParser.SearchStr = oe;
+                m_AmazonParser.Search(sku, oe);
+            }
+
+            m_AmazonParser.Parse();
+            var exp = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath);
+
+            m_AmazonParser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
+
+            /*HtmlWeb web = new HtmlWeb()
             {
                 AutoDetectEncoding = false,
                 OverrideEncoding = Encoding.UTF8
@@ -355,13 +394,16 @@ namespace Depotop_MC_Tools
             web.UseCookies = true;
             web.UserAgent =
                    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
+
+
             var htmlDoc = web.Load(m_SearchUrl + "71714472");
 
             var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 's-result-item')]");
-            var m_ImageLink = new List<ImageLink>();
+            var m_ImageLink = new List<AmazonImageLink>();
             var amazonAnounces = new List<AmazonAnounce>();
 
-            if (nodes != null)
+          
+                      if (nodes != null)
             {
                 foreach (HtmlNode item in nodes)
                 {
@@ -373,17 +415,16 @@ namespace Depotop_MC_Tools
                         postUrl = pn.Value;
                     }
 
-
                     var iurlNode = item.SelectSingleNode(".//img/@src");
                     if (iurlNode == null)
                         continue;
+
                     var src = iurlNode.Attributes.FirstOrDefault(u => u.Name == "src");
 
-                    var anounce = new AmazonAnounce(src.Value);
-                    anounce.ImageLinks.Add(new ImageLink(src.Value));
+                    var anounce = new AmazonAnounce(src.Value, new AmazonImageLink(src.Value));
+                    
                     amazonAnounces.Add(anounce);
-
-                    /*var iurl = src.Value;
+var iurl = src.Value;
 
                     var pattern = @"([^/]+$)";
                     var content = src.Value;
@@ -402,10 +443,10 @@ namespace Depotop_MC_Tools
                         // error
                     }
 
-                    */
+                    
                     TbImageParseSku.Text += src.Value + "\n";
                 }
-            }
+            }*/
 
             /*
              [^/]+$
@@ -422,6 +463,80 @@ namespace Depotop_MC_Tools
             //   TbImageParseSku.Text = "Node Name: " + node.Name + "\n" + node.OuterHtml;
         }
 
+        private void BtnSelectParserOutDir_Click(object sender, RoutedEventArgs e)
+        {
+            using (var dialog = new FolderBrowserDialog())
+            {
+                if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                    return;
+
+                var path = dialog.SelectedPath;
+
+                if (!Directory.Exists(path))
+                    return;
+
+                ParserOutDir = path;
+            }
+        }
+
+        private void BtSelectParserFile_Click(object sender, RoutedEventArgs e)
+        {
+            var fileContent = string.Empty;
+            var filePath = string.Empty;
+
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                //openFileDialog.InitialDirectory = "c:\\";
+                openFileDialog.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 2;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    //Get the path of specified file
+                    TbParserFile.Text = openFileDialog.FileName;
+
+                    //Read the contents of the file into a stream
+                    var fileStream = openFileDialog.OpenFile();
+
+                    using (StreamReader reader = new StreamReader(fileStream))
+                    {
+                        List<string> listA = new List<string>();
+                        List<string> listB = new List<string>();
+                        while (!reader.EndOfStream)
+                        {
+                            var line = reader.ReadLine();
+                            var values = line.Split(';');
+
+                            listA.Add(values[0]);
+                            listB.Add(values[1]);
+                        }
+                    }
+                }
+            }
+        }
+
+        private List<string[]> ReadParserCsvFile()
+        {
+            var result = new List<string[]>();
+            if (!File.Exists(TbParserFile.Text))
+            {
+                System.Windows.MessageBox.Show("Укажите csv файл сначала!");
+                return result;
+            }
+
+            using (var reader = new StreamReader(TbParserFile.Text))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = line.Split(';');
+
+                    result.Add(values);
+                }
+            }
+            return result;
+        }
         #endregion
 
 
