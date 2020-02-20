@@ -40,6 +40,7 @@ namespace Depotop_MC_Tools
         public string UserAgent { get => m_UserAgent; set => m_UserAgent = value; }
         public List<string> ImagesUrl { get => m_ImagesUrl; set => m_ImagesUrl = value; }
         public Dictionary<string, List<Anounce>> SearchResults { get => m_searchResults; set => m_searchResults = value; }
+        public HtmlWeb HtmlWebInstance { get => m_HtmlWeb; set => m_HtmlWeb = value; }
 
         public virtual void Parse()
         {
@@ -47,7 +48,7 @@ namespace Depotop_MC_Tools
             {
                 foreach (var a in kvp.Value)
                 {
-                    a.LoadAnounceData(m_HtmlWeb);
+                    a.LoadAnounceData(this);
                 }
             }
         }
@@ -85,6 +86,13 @@ namespace Depotop_MC_Tools
             }
 
             File.WriteAllText(path, csv.ToString());
+        }
+
+        public static string GetFileExtensionFromUrl(string url)
+        {
+            url = url.Split('?')[0];
+            url = url.Split('/').Last();
+            return url.Contains('.') ? url.Substring(url.LastIndexOf('.')) : "";
         }
     }
 }

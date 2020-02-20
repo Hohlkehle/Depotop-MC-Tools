@@ -18,6 +18,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using HtmlAgilityPack;
 using static Depotop_MC_Tools.AmazonParser;
+using System.Net;
 
 namespace Depotop_MC_Tools
 {
@@ -93,66 +94,74 @@ namespace Depotop_MC_Tools
 
         private void ReadInputData()
         {
+            _busyIndicator.IsBusy = true;
             TbOutputData.Text = "";
             m_Records.Clear();
             Titles = TbInputTitles.Text.Split(';').ToList<string>();
 
             var text = TbInputData.Text;
-            string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
-            var autos = String.Join("|", m_AutoList.ToArray());
-            for (var i = 0; i < lines.Length; i++)
+            Task.Factory.StartNew(() =>
             {
-                if (lines[i] == string.Empty)
-                    continue;
-
-                var marque = "";
-                var sides = "";
-                var items = lines[i].Split(new[] { ';' });
-
-                var pattern = @"(" + autos + ")";
-                var content = items[1];
-                Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
-                Match match = rgx.Match(content);
-
-
-                if (match.Success)
+                string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+                var autos = String.Join("|", m_AutoList.ToArray());
+                for (var i = 0; i < lines.Length; i++)
                 {
-                    marque = match.Value.ToUpper().Trim();
-                }
-                else
-                {
-                    pattern = @"(^\w+)";
-                    rgx = new Regex(pattern, RegexOptions.IgnoreCase);
-                    match = rgx.Match(content);
+                    if (lines[i] == string.Empty)
+                        continue;
+
+                    var marque = "";
+                    var sides = "";
+                    var items = lines[i].Split(new[] { ';' });
+
+                    var pattern = @"(" + autos + ")";
+                    var content = items[1];
+                    Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+                    Match match = rgx.Match(content);
+
+
                     if (match.Success)
                     {
                         marque = match.Value.ToUpper().Trim();
                     }
                     else
-                        continue;
+                    {
+                        pattern = @"(^\w+)";
+                        rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+                        match = rgx.Match(content);
+                        if (match.Success)
+                        {
+                            marque = match.Value.ToUpper().Trim();
+                        }
+                        else
+                            continue;
+                    }
+                    pattern = "(avant|arriére|arriere|supérieur|superieur|inferieur|droite|gauche|longitudinal|transversal)";
+                    content = items[1];
+                    MatchCollection matchList = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
+                    var sidesList = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
+                    var uniquesidesList = new HashSet<string>(sidesList);
+                    sides = String.Join(" ", uniquesidesList.ToArray());
+
+                    var title = new TitleData(items[0], marque, sides, items[2]);
+
+
+                    m_Records.Add(items[0], new[] { items[2], marque, sides });
+
+                    var output = String.Format("{0}\t{1}\t{2}\t{3}\t{4}",
+                        FormatTitle(title, Langs.FR),
+                        FormatTitle(title, Langs.EN),
+                        FormatTitle(title, Langs.RU),
+                        FormatTitle(title, Langs.DE),
+                        FormatTitle(title, Langs.IT));
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        TbOutputData.Text += output;
+                        TbOutputData.Text += "\r\n";
+                        _busyIndicator.IsBusy = false;
+                    });
                 }
-                pattern = "(avant|arriére|arriere|supérieur|superieur|inferieur|droite|gauche|longitudinal|transversal)";
-                content = items[1];
-                MatchCollection matchList = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
-                var sidesList = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
-                var uniquesidesList = new HashSet<string>(sidesList);
-                sides = String.Join(" ", uniquesidesList.ToArray());
-
-                var title = new TitleData(items[0], marque, sides, items[2]);
-
-
-                m_Records.Add(items[0], new[] { items[2], marque, sides });
-
-                var output = String.Format("{0}\t{1}\t{2}\t{3}\t{4}",
-                    FormatTitle(title, Langs.FR),
-                    FormatTitle(title, Langs.EN),
-                    FormatTitle(title, Langs.RU),
-                    FormatTitle(title, Langs.DE),
-                    FormatTitle(title, Langs.IT));
-
-                TbOutputData.Text += output;
-                TbOutputData.Text += "\r\n";
-            }
+            });
         }
 
         private string FormatTitle(TitleData titleData, Langs lang)
@@ -488,30 +497,13 @@ var iurl = src.Value;
             {
                 //openFileDialog.InitialDirectory = "c:\\";
                 openFileDialog.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
-                openFileDialog.FilterIndex = 2;
+                openFileDialog.FilterIndex = 1;
                 openFileDialog.RestoreDirectory = true;
 
                 if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
                     //Get the path of specified file
                     TbParserFile.Text = openFileDialog.FileName;
-
-                    //Read the contents of the file into a stream
-                    var fileStream = openFileDialog.OpenFile();
-
-                    using (StreamReader reader = new StreamReader(fileStream))
-                    {
-                        List<string> listA = new List<string>();
-                        List<string> listB = new List<string>();
-                        while (!reader.EndOfStream)
-                        {
-                            var line = reader.ReadLine();
-                            var values = line.Split(';');
-
-                            listA.Add(values[0]);
-                            listB.Add(values[1]);
-                        }
-                    }
                 }
             }
         }
@@ -537,6 +529,86 @@ var iurl = src.Value;
             }
             return result;
         }
+
+        private void BtStartParserDownloading_Click(object sender, RoutedEventArgs e)
+        {
+            List<string[]> dwnList;
+
+            try
+            {
+                dwnList = ReadParserCsvFile();
+            }
+            catch (System.IO.IOException ex)
+            {
+                System.Windows.MessageBox.Show(ex.Message);
+                return;
+            }
+
+
+            if (dwnList.Count == 0)
+            {
+                System.Windows.MessageBox.Show("Нет файлов для загрузки!");
+                return;
+            }
+            if (!Directory.Exists(ParserOutDir))
+            {
+                System.Windows.MessageBox.Show("Укажите папку для загрузки сначала!");
+                return;
+            }
+            using (WebClient client = new WebClient())
+            {
+                //client.DownloadFile(new Uri(url), @"c:\temp\image35.png");
+                // OR 
+                //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
+                _busyIndicator.IsBusy = true;
+                TbOutputData.Text = "";
+                m_Records.Clear();
+                Titles = TbInputTitles.Text.Split(';').ToList<string>();
+
+                var text = TbInputData.Text;
+
+                var imgIndex = 1;
+                var lastSku = dwnList[0][0];
+                foreach (var line in dwnList)
+                {
+                    _busyIndicator.IsBusy = true;
+                    var dir = line[0];
+                    var imgurl = line[1];
+                    var ext = Parser.GetFileExtensionFromUrl(imgurl);
+                    var fileName = string.Format("{0}_{1}{2}", dir, imgIndex, ext);
+                    var dwnDir = System.IO.Path.Combine(ParserOutDir, dir);
+                    var downImage = System.IO.Path.Combine(dwnDir, fileName);
+
+                    if (!Directory.Exists(dwnDir))
+                    {
+                        Directory.CreateDirectory(dwnDir);
+                    }
+
+                    // Task.Factory.StartNew(() => { });
+
+                    
+                    try
+                    {
+                        client.DownloadFile(new Uri(imgurl), downImage);
+                        //client.DownloadFileAsync(new Uri(imgurl), downImage);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show(ex.Message);
+                    }
+
+
+                    if (lastSku == dir)
+                        imgIndex++;
+                    else
+                        imgIndex = 1;
+                }
+
+                Dispatcher.Invoke(() => { _busyIndicator.IsBusy = false; });
+            }
+
+        }
+
         #endregion
 
 

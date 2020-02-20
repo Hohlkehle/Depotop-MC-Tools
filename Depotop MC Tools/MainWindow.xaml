@@ -8,9 +8,7 @@
         mc:Ignorable="d"
         Title="Depotop Tools" Height="451.027" Width="652.118">
     <Grid>
-        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" >
-            <ContentControl />
-        </xctk:BusyIndicator>
+        
         <TabControl Margin="0">
             <TabItem Header="Titles">
                 <Grid Background="#FFE5E5E5">
@@ -115,19 +113,21 @@
                     <GroupBox Grid.Column="1" Header="Скачать" HorizontalAlignment="Left" Height="208" Margin="10,10,0,0" Grid.Row="1" VerticalAlignment="Top" Width="427">
                         <Grid>
                             <TextBlock HorizontalAlignment="Left" Margin="10,68,0,0" TextWrapping="Wrap" Text="Папка для сохранения" VerticalAlignment="Top"/>
-                            <TextBox x:Name="TbParserOutDir" HorizontalAlignment="Left" Height="23" Margin="10,89,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="300"/>
+                            <TextBox x:Name="TbParserOutDir" HorizontalAlignment="Left" Height="23" Margin="10,89,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="300"/>
                             <Button x:Name="BtnSelectParserOutDir" Content="Выбрать" HorizontalAlignment="Left" Margin="330,92,0,0" VerticalAlignment="Top" Width="75" Click="BtnSelectParserOutDir_Click"/>
                             <TextBlock HorizontalAlignment="Left" Margin="10,10,0,0" TextWrapping="Wrap" Text="Выберите csv файл" VerticalAlignment="Top"/>
-                            <TextBox x:Name="TbParserFile" HorizontalAlignment="Left" Height="23" Margin="10,31,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="300"/>
+                            <TextBox x:Name="TbParserFile" HorizontalAlignment="Left" Height="23" Margin="10,31,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="300"/>
                             <Button x:Name="BtSelectParserFile" Content="Выбрать" HorizontalAlignment="Left" Margin="330,34,0,0" VerticalAlignment="Top" Width="75" Click="BtSelectParserFile_Click"/>
-                            <Button x:Name="BtStartParserDownloading" Content="Начать" HorizontalAlignment="Left" Margin="330,155,0,0" VerticalAlignment="Top" Width="75"/>
+                            <Button x:Name="BtStartParserDownloading" Content="Начать" HorizontalAlignment="Left" Margin="330,155,0,0" VerticalAlignment="Top" Width="75" Click="BtStartParserDownloading_Click"/>
                         </Grid>
                     </GroupBox>
                 </Grid>
             </TabItem>
         </TabControl>
 
-
+        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" >
+            <ContentControl />
+        </xctk:BusyIndicator>
 
     </Grid>
 </Window>

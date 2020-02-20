@@ -13,7 +13,7 @@ namespace Depotop_MC_Tools
 
         public List<ImageLink> ImageLinks { get => m_ImageLinks; set => m_ImageLinks = value; }
 
-        public virtual void LoadAnounceData(HtmlAgilityPack.HtmlWeb htmlWeb)
+        public virtual void LoadAnounceData(Parser parser)
         {
 
         }

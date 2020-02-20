@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -104,12 +105,14 @@ namespace Depotop_MC_Tools
                 }
                 Size = s;
                 //https://m.media-amazon.com/images/I/71nCl5DivdL._AC_UY218_ML3_.jpg
-                return string.Format("{0}{1}.{2}{3}", ServerPath, m_Name, Size, Ext);
+                Src = string.Format("{0}{1}.{2}{3}", ServerPath, m_Name, Size, Ext);
+                return Src;
             }
         }
 
         public class AmazonAnounce : Anounce
         {
+            private string m_HomeUrl = "https://www.amazon.com";
             private string m_Url;
             public AmazonAnounce(string url, AmazonImageLink prewievImage)
             {
@@ -125,6 +128,7 @@ namespace Depotop_MC_Tools
             }
 
             public string Url { get => m_Url; set => m_Url = value; }
+            public string FullUrl { get => m_HomeUrl + m_Url; }
             //public List<AmazonImageLink> ImageLinks { get => m_ImageLinks; set => m_ImageLinks = value; }
             public AmazonImageLink PrewievImage
             {
@@ -134,26 +138,26 @@ namespace Depotop_MC_Tools
                 }
             }
 
-            public override void LoadAnounceData(HtmlAgilityPack.HtmlWeb htmlWeb)
+            public override void LoadAnounceData(Parser parser)
             {
-                var htmlDoc = htmlWeb.Load(Url);
+                var htmlDoc = parser.HtmlWebInstance.Load(FullUrl);
                 //var nodes = htmlDoc.DocumentNode.SelectNodes(".//");
                 //images/I/([^.]+)[.]_SL
                 //ImageBlockATF
                 var html = htmlDoc.DocumentNode;
-
-
                 var pattern = @"images/I/([^.]+)[.]_SL";
 
-                MatchCollection matchList = Regex.Matches(html.InnerText, pattern, RegexOptions.IgnoreCase);
-                var resList = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
-                var uniquesidesList = new HashSet<string>(resList);
-                foreach (var iName in uniquesidesList)
+                MatchCollection matchList = Regex.Matches(html.OuterHtml, pattern, RegexOptions.IgnoreCase);
+                foreach (Match match in matchList)
                 {
-                    var link = new AmazonImageLink(PrewievImage);
-                    link.Name = iName;
-                    link.ReBuild(ImageSize.FullSize);
-                    ImageLinks.Add(link);
+                    if (match.Groups.Count > 1)
+                    {
+                        var iName = match.Groups[1].Value;
+                        var link = new AmazonImageLink(PrewievImage);
+                        link.Name = iName;
+                        link.ReBuild(ImageSize.FullSize);
+                        ImageLinks.Add(link);
+                    }
                 }
             }
         }
@@ -161,9 +165,7 @@ namespace Depotop_MC_Tools
         public override void Initialize()
         {
             base.Initialize();
-
         }
-
 
         public override void Search(string id, string searchStr)
         {
@@ -191,10 +193,12 @@ namespace Depotop_MC_Tools
 
                     var src = iurlNode.Attributes.FirstOrDefault(u => u.Name == "src");
 
-                    var anounce = new AmazonAnounce(src.Value, new AmazonImageLink(src.Value));
+                    var anounce = new AmazonAnounce(postUrl, new AmazonImageLink(src.Value));
 
                     amazonAnounces.Add(anounce);
 
+                    if (amazonAnounces.Count >= 3)
+                        break;
                 }
             }
             m_searchResults.Add(id, amazonAnounces);
