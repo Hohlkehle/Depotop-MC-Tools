@@ -1,5 +1,6 @@
 ﻿using HtmlAgilityPack;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,22 @@ namespace Depotop_MC_Tools
 {
     public class Parser
     {
-        public class ImageLink
+        public class ImageLink : IComparer, IComparable
         {
             public virtual string Url { get; }
+            public virtual string BigImageUrl { get; }
+
+            public virtual int Compare(object x, object y)
+            {
+                if (((ImageLink)x).Url == ((ImageLink)y).Url) return 1;
+                return 0;
+            }
+
+            public virtual int CompareTo(object obj)
+            {
+                ImageLink c = (ImageLink)obj;
+                return String.Compare(this.Url, c.Url);
+            }
         }
         public class ParsedImage
         {
@@ -32,7 +46,7 @@ namespace Depotop_MC_Tools
         }
         protected HtmlWeb m_HtmlWeb;
         protected string m_SearchStr = "";
-        protected string m_UserAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
+        protected string m_UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win32; x86) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 ";
         protected List<string> m_ImagesUrl;
         protected Dictionary<string, List<Anounce>> m_searchResults;
         public Parser() { m_ImagesUrl = new List<string>(); }
@@ -56,15 +70,17 @@ namespace Depotop_MC_Tools
         public virtual void Initialize()
         {
             m_searchResults = new Dictionary<string, List<Anounce>>();
-
-            m_HtmlWeb = new HtmlWeb()
+            if (m_HtmlWeb == null)
             {
-                AutoDetectEncoding = false,
-                OverrideEncoding = Encoding.UTF8
-            };
-
-            m_HtmlWeb.UseCookies = true;
-            m_HtmlWeb.UserAgent = UserAgent;
+                m_HtmlWeb = new HtmlWeb()
+                {
+                    AutoDetectEncoding = false,
+                    OverrideEncoding = Encoding.UTF8
+                };
+                m_HtmlWeb.BrowserDelay = TimeSpan.FromSeconds(1);
+                m_HtmlWeb.UseCookies = true;
+                m_HtmlWeb.UserAgent = UserAgent;
+            }
         }
 
         public void DumpResultToCsv(string path)
@@ -79,7 +95,7 @@ namespace Depotop_MC_Tools
                         continue;
                     foreach (var i in a.ImageLinks)
                     {
-                        var newLine = string.Format("{0};{1}", kvp.Key, i.Url);
+                        var newLine = string.Format("{0};{1}", kvp.Key, i.BigImageUrl);
                         csv.AppendLine(newLine);
                     }
                 }

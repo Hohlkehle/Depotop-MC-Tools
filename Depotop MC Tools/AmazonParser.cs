@@ -91,6 +91,7 @@ namespace Depotop_MC_Tools
             public string Size { get => m_Size; set => m_Size = value; }
             public string Ext { get => m_Ext; set => m_Ext = value; }
             public override string Url { get { return ServerPath + FullName; } }
+            public override string BigImageUrl { get { return ServerPath + m_Name + m_Ext; } }
             public string ReBuild(ImageSize size)
             {
                 var s = "_AC_UY218_ML3_";
@@ -107,6 +108,20 @@ namespace Depotop_MC_Tools
                 //https://m.media-amazon.com/images/I/71nCl5DivdL._AC_UY218_ML3_.jpg
                 Src = string.Format("{0}{1}.{2}{3}", ServerPath, m_Name, Size, Ext);
                 return Src;
+            }
+
+            public override int Compare(object x, object y)
+            {
+                if (((AmazonImageLink)x).Name == ((AmazonImageLink)y).Name) return 1;
+                return 0;
+            }
+
+            public override int CompareTo(object obj)
+            {
+                AmazonImageLink c = (AmazonImageLink)obj;
+                if(this.Name == c.Name) 
+                    return 1;
+                return 0;
             }
         }
 
@@ -140,14 +155,26 @@ namespace Depotop_MC_Tools
 
             public override void LoadAnounceData(Parser parser)
             {
-                var htmlDoc = parser.HtmlWebInstance.Load(FullUrl);
+                var htmlDoc = parser.HtmlWebInstance.LoadFromBrowser(FullUrl);
                 //var nodes = htmlDoc.DocumentNode.SelectNodes(".//");
                 //images/I/([^.]+)[.]_SL
-                //ImageBlockATF
+                var startSplit = "ImageBlockATF"; // - split 1
+                var endSplit = "trigger ATF event"; // - split 2
                 var html = htmlDoc.DocumentNode;
-                var pattern = @"images/I/([^.]+)[.]_SL";
+                var htmlStr = html.OuterHtml;
+                var pattern = @"images/I/([^.]+)[.]";
+                string[] pageSplit = null, pageSplit2 = null;
+                string strForMatch = "";
+                pageSplit = htmlStr.Split(new string[] { startSplit }, StringSplitOptions.None);
+                
+                if(pageSplit != null && pageSplit.Length == 2)
+                {
+                    pageSplit2 = pageSplit[1].Split(new string[] { endSplit }, StringSplitOptions.None);
+                }
+                if (pageSplit2 != null && pageSplit2.Length == 2)
+                    strForMatch = pageSplit2[0];
 
-                MatchCollection matchList = Regex.Matches(html.OuterHtml, pattern, RegexOptions.IgnoreCase);
+                MatchCollection matchList = Regex.Matches(strForMatch, pattern, RegexOptions.IgnoreCase);
                 foreach (Match match in matchList)
                 {
                     if (match.Groups.Count > 1)
@@ -155,10 +182,23 @@ namespace Depotop_MC_Tools
                         var iName = match.Groups[1].Value;
                         var link = new AmazonImageLink(PrewievImage);
                         link.Name = iName;
-                        link.ReBuild(ImageSize.FullSize);
-                        ImageLinks.Add(link);
+                        var contains = false;
+                        foreach (var im in ImageLinks)
+                        {
+                            if (link.CompareTo(im) == 1)
+                            {
+                                contains = true;
+                            }
+                        }
+
+                        if (!contains)
+                        {
+                            link.ReBuild(ImageSize.FullSize);
+                            ImageLinks.Add(link);
+                        }
                     }
                 }
+                ImageLinks = ImageLinks.Distinct().ToList();
             }
         }
 
@@ -169,7 +209,7 @@ namespace Depotop_MC_Tools
 
         public override void Search(string id, string searchStr)
         {
-            var htmlDoc = m_HtmlWeb.Load(SearchUrl + searchStr);
+            var htmlDoc = m_HtmlWeb.LoadFromBrowser(SearchUrl + searchStr);
 
             var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 's-result-item')]");
             var m_ImageLink = new List<AmazonImageLink>();
