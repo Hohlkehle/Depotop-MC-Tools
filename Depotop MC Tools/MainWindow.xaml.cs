@@ -347,20 +347,15 @@ namespace Depotop_MC_Tools
         #endregion
         #region Image Parser
         public string ParserOutDir { get { return TbParserOutDir.Text; } set { TbParserOutDir.Text = value; } }
-        private string m_SearchUrl = "https://www.amazon.com/s?k=";
+
         private void InitializeImageParser()
-        {
-
-
-
-
-
-        }
+        { }
 
         private List<string[]> ParseInputData()
         {
             var text = TbImageParseSku.Text;
             string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            PbParsingProgress.Maximum = lines.Length;
             //return lines.Where(x => !string.IsNullOrEmpty(x)).Distinct() .ToArray();
             var input = new List<string[]>();
             for (var i = 0; i < lines.Length; i++)
@@ -370,106 +365,64 @@ namespace Depotop_MC_Tools
 
                 var items = lines[i].Split(new string[] { " " }, StringSplitOptions.None);
                 input.Add(items);
-
+                PbParsingProgress.Value = input.Count;
             }
             return input;
         }
 
         private void BtnStartParce_Click(object sender, RoutedEventArgs e)
         {
+            TbParserStatus.Text = "Parsing started";
             var input = ParseInputData();
             Parser m_AmazonParser = new AmazonParser(null);
             m_AmazonParser.Initialize(/*HtmlWeb params*/);
-
+            PbParsingProgress.Maximum = input.Count;
+            var i = 0;
             foreach (var line in input)
             {
                 var sku = line[0];
                 var oe = line[1];
                 m_AmazonParser.SearchStr = oe;
                 m_AmazonParser.Search(sku, oe);
+
+                TbParserStatus.Text = "Parsing images links for " + sku;
+
+                if (m_AmazonParser.LastSearchResult.Count > 0)
+                {
+                    UpdateParserImagePrewiev(m_AmazonParser.LastSearchResult[0].PrewievUrl);
+                }
+
+                i++;
+                PbParsingProgress.Value = i;
             }
 
-            m_AmazonParser.Parse();
+            TbParserStatus.Text = "Parsing anounces links..";
+
+            PbParsingProgress.Maximum = m_AmazonParser.ResultsCount - 1;
+            foreach (var result in m_AmazonParser.Parse())
+            {
+                PbParsingProgress.Value = result.Index;
+                UpdateParserImagePrewiev(result.ImgUrl);
+            }
+
             var exp = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath);
 
-            m_AmazonParser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
-
-            /*HtmlWeb web = new HtmlWeb()
+            try
             {
-                AutoDetectEncoding = false,
-                OverrideEncoding = Encoding.UTF8
-            };
-
-            web.UseCookies = true;
-            web.UserAgent =
-                   "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
-
-
-            var htmlDoc = web.Load(m_SearchUrl + "71714472");
-
-            var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 's-result-item')]");
-            var m_ImageLink = new List<AmazonImageLink>();
-            var amazonAnounces = new List<AmazonAnounce>();
-
-          
-                      if (nodes != null)
+                System.IO.File.Delete("output.csv");
+                m_AmazonParser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
+            }
+            catch (Exception ex)
             {
-                foreach (HtmlNode item in nodes)
-                {
-                    var postUrl = "";
-                    var postNode = item.SelectSingleNode(".//a[contains(@class, 'a-link-normal')]");
-                    if (postNode != null)
-                    {
-                        var pn = postNode.Attributes.FirstOrDefault(u => u.Name == "href");
-                        postUrl = pn.Value;
-                    }
+                var rfileName = "output" + System.IO.Path.GetRandomFileName() + ".csv";
+                m_AmazonParser.DumpResultToCsv(System.IO.Path.Combine(exp, rfileName));
+                System.Windows.MessageBox.Show(ex.Message);
+                System.Windows.MessageBox.Show("File saved as " + rfileName);
+            }
 
-                    var iurlNode = item.SelectSingleNode(".//img/@src");
-                    if (iurlNode == null)
-                        continue;
-
-                    var src = iurlNode.Attributes.FirstOrDefault(u => u.Name == "src");
-
-                    var anounce = new AmazonAnounce(src.Value, new AmazonImageLink(src.Value));
-                    
-                    amazonAnounces.Add(anounce);
-var iurl = src.Value;
-
-                    var pattern = @"([^/]+$)";
-                    var content = src.Value;
-                    var imgName = "";
-                    Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
-                    Match match = rgx.Match(content);
-
-
-                    if (match.Success)
-                    {
-                        imgName = match.Value.Trim();
-                        m_ImageLink.Add(new ImageLink(content));
-                    }
-                    else
-                    {
-                        // error
-                    }
-
-                    
-                    TbImageParseSku.Text += src.Value + "\n";
-                }
-            }*/
-
-            /*
-             [^/]+$
-
-            var rawHtml = htmlDoc.DocumentNode.OuterHtml;
-            var pattern = @"(avant|arriére|arriere|supérieur|superieur|inferieur|droite|gauche|longitudinal|transversal)";
-            var content = rawHtml;
-            MatchCollection matchList = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
-            var imageUrls = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
-
-            */
-
-            //if (node != null)
-            //   TbImageParseSku.Text = "Node Name: " + node.Name + "\n" + node.OuterHtml;
+            UpdateParserImagePrewiev(null);
+            TbParserStatus.Text = "Parsing done";
+            //System.Windows.MessageBox.Show("Парсиг завершен!");
         }
 
         private void BtnSelectParserOutDir_Click(object sender, RoutedEventArgs e)
@@ -508,8 +461,82 @@ var iurl = src.Value;
             }
         }
 
+        private void BtStartParserDownloading_Click(object sender, RoutedEventArgs e)
+        {
+            if (!File.Exists(TbParserFile.Text))
+            {
+                System.Windows.MessageBox.Show("Укажите csv файл сначала!");
+                return;
+            }
+
+            if (!Directory.Exists(ParserOutDir))
+            {
+                System.Windows.MessageBox.Show("Укажите папку для загрузки сначала!");
+                return;
+            }
+
+            TbParserStatus.Text = "Start downloading...";
+            PbParsingProgress.Value = 0;
+
+            var imageDownloader = new ImageDownloader(TbParserFile.Text, ParserOutDir);
+            PbParsingProgress.Maximum = imageDownloader.LoadData() - 1;
+            imageDownloader.SplitByFolder = CbSplitByFolder.IsChecked == true;
+            _busyIndicator.IsBusy = true;
+            Task.Factory.StartNew(() =>
+            {
+                foreach (var result in imageDownloader.DownloadNext())
+                {
+                    FileSystemWatcher fw = new FileSystemWatcher(System.IO.Path.GetDirectoryName(result.File)) { EnableRaisingEvents = true };
+                    fw.Created += (object ffSender, FileSystemEventArgs eargs) =>
+                    {
+                        Thread.Sleep(3500);
+                        Dispatcher.Invoke(() =>
+                        {
+                            UpdateParserImagePrewiev(eargs.FullPath);
+                        });
+                    };
+
+                    Dispatcher.Invoke(() =>
+                    {
+                        _busyIndicator.IsBusy = true;
+                        PbParsingProgress.Value = result.Index;
+
+                        TbParserStatus.Text = "Downloading images for " + result.Key;
+                        _busyIndicator.IsBusy = false;
+                    });
+                }
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateParserImagePrewiev(null);
+                    TbParserStatus.Text = "Downloading done";
+                });
+            });
+        }
+
+        private void UpdateParserImagePrewiev(string uri)
+        {
+            if (uri == null)
+            {
+                IParserImagePreview.Source = null;
+                return;
+            }
+            try
+            {
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(uri, UriKind.Absolute);
+                bitmap.EndInit();
+                IParserImagePreview.Source = bitmap;
+            }
+            catch (Exception) { }
+        }
+
+
+
+        [Obsolete]
         private List<string[]> ReadParserCsvFile()
         {
+
             var result = new List<string[]>();
             if (!File.Exists(TbParserFile.Text))
             {
@@ -517,6 +544,7 @@ var iurl = src.Value;
                 return result;
             }
 
+            PbParsingProgress.Maximum = TbParserFile.Text.Split(new string[] { "\r\n" }, StringSplitOptions.None).Length;
             using (var reader = new StreamReader(TbParserFile.Text))
             {
                 while (!reader.EndOfStream)
@@ -525,13 +553,95 @@ var iurl = src.Value;
                     var values = line.Split(';');
 
                     result.Add(values);
+                    PbParsingProgress.Value = result.Count;
                 }
             }
             return result;
         }
+        #endregion
 
-        private void BtStartParserDownloading_Click(object sender, RoutedEventArgs e)
+
+    }
+}
+
+/*HtmlWeb web = new HtmlWeb()
+{
+    AutoDetectEncoding = false,
+    OverrideEncoding = Encoding.UTF8
+};
+
+web.UseCookies = true;
+web.UserAgent =
+       "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
+
+
+var htmlDoc = web.Load(m_SearchUrl + "71714472");
+
+var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 's-result-item')]");
+var m_ImageLink = new List<AmazonImageLink>();
+var amazonAnounces = new List<AmazonAnounce>();
+
+
+          if (nodes != null)
+{
+    foreach (HtmlNode item in nodes)
+    {
+        var postUrl = "";
+        var postNode = item.SelectSingleNode(".//a[contains(@class, 'a-link-normal')]");
+        if (postNode != null)
         {
+            var pn = postNode.Attributes.FirstOrDefault(u => u.Name == "href");
+            postUrl = pn.Value;
+        }
+
+        var iurlNode = item.SelectSingleNode(".//img/@src");
+        if (iurlNode == null)
+            continue;
+
+        var src = iurlNode.Attributes.FirstOrDefault(u => u.Name == "src");
+
+        var anounce = new AmazonAnounce(src.Value, new AmazonImageLink(src.Value));
+
+        amazonAnounces.Add(anounce);
+var iurl = src.Value;
+
+        var pattern = @"([^/]+$)";
+        var content = src.Value;
+        var imgName = "";
+        Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+        Match match = rgx.Match(content);
+
+
+        if (match.Success)
+        {
+            imgName = match.Value.Trim();
+            m_ImageLink.Add(new ImageLink(content));
+        }
+        else
+        {
+            // error
+        }
+
+
+        TbImageParseSku.Text += src.Value + "\n";
+    }
+}*/
+
+/*
+ [^/]+$
+
+var rawHtml = htmlDoc.DocumentNode.OuterHtml;
+var pattern = @"(avant|arriére|arriere|supérieur|superieur|inferieur|droite|gauche|longitudinal|transversal)";
+var content = rawHtml;
+MatchCollection matchList = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
+var imageUrls = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
+
+*/
+
+//if (node != null)
+//   TbImageParseSku.Text = "Node Name: " + node.Name + "\n" + node.OuterHtml;
+/*
+            TbParserStatus.Text = "Downloading start";
             List<string[]> dwnList;
 
             try
@@ -555,19 +665,17 @@ var iurl = src.Value;
                 System.Windows.MessageBox.Show("Укажите папку для загрузки сначала!");
                 return;
             }
+
+            PbParsingProgress.Maximum = dwnList.Count;
+            PbParsingProgress.Value = 0;
             using (WebClient client = new WebClient())
             {
                 //client.DownloadFile(new Uri(url), @"c:\temp\image35.png");
                 // OR 
                 //client.DownloadFileAsync(new Uri(url), @"c:\temp\image35.png");
                 _busyIndicator.IsBusy = true;
-                TbOutputData.Text = "";
-                m_Records.Clear();
-                Titles = TbInputTitles.Text.Split(';').ToList<string>();
-
-                var text = TbInputData.Text;
-
-                var imgIndex = 1;
+            
+                var imgIndex = 0;
                 var lastSku = dwnList[0][0];
                 foreach (var line in dwnList)
                 {
@@ -575,8 +683,17 @@ var iurl = src.Value;
                     var dir = line[0];
                     var imgurl = line[1];
                     var ext = Parser.GetFileExtensionFromUrl(imgurl);
+                    
+                    if (lastSku == dir)
+                        imgIndex++;
+                    else
+                    {
+                        lastSku = dir;
+                        imgIndex = 1;
+                    }
+
                     var fileName = string.Format("{0}_{1}{2}", dir, imgIndex, ext);
-                    var dwnDir = System.IO.Path.Combine(ParserOutDir, dir);
+                    var dwnDir = (CbSplitByFolder.IsChecked == true) ? System.IO.Path.Combine(ParserOutDir, dir) : ParserOutDir;
                     var downImage = System.IO.Path.Combine(dwnDir, fileName);
 
                     if (!Directory.Exists(dwnDir))
@@ -585,32 +702,21 @@ var iurl = src.Value;
                     }
 
                     // Task.Factory.StartNew(() => { });
-
                     
                     try
                     {
                         client.DownloadFile(new Uri(imgurl), downImage);
+                        UpdateParserImagePrewiev(downImage);
                         //client.DownloadFileAsync(new Uri(imgurl), downImage);
                     }
                     catch (Exception ex)
                     {
                         System.Windows.MessageBox.Show(ex.Message);
                     }
-
-
-                    if (lastSku == dir)
-                        imgIndex++;
-                    else
-                        imgIndex = 1;
+                    PbParsingProgress.Value++;
                 }
 
                 Dispatcher.Invoke(() => { _busyIndicator.IsBusy = false; });
             }
-
-        }
-
-        #endregion
-
-
-    }
-}
+            TbParserStatus.Text = "Downloading done";
+            */

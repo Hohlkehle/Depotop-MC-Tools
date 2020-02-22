@@ -8,7 +8,9 @@
         mc:Ignorable="d"
         Title="Depotop Tools" Height="451.027" Width="652.118">
     <Grid>
-        
+        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" >
+            <ContentControl />
+        </xctk:BusyIndicator>
         <TabControl Margin="0">
             <TabItem Header="Titles">
                 <Grid Background="#FFE5E5E5">
@@ -92,11 +94,11 @@
                     </Grid.ColumnDefinitions>
                     <GroupBox Header="GroupBox" Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Height="372" Margin="10,10,0,0" VerticalAlignment="Top" Width="171" Grid.RowSpan="3">
                         <Grid>
-                            <TextBox x:Name="TbImageParseSku" Height="199" Margin="0,10,0,0"
+                            <TextBox x:Name="TbImageParseSku" Height="176" Margin="0,10,0,0"
                                  TextWrapping="Wrap" AcceptsReturn="True"
                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                                  Text="" VerticalAlignment="Top"/>
-                            <Image x:Name="ImagePreview" HorizontalAlignment="Left" Height="135" Margin="0,214,0,0" VerticalAlignment="Top" Width="159"/>
+                            <Image x:Name="IParserImagePreview" HorizontalAlignment="Left" Height="122" Margin="0,191,0,0" VerticalAlignment="Top" Width="159"/>
                         </Grid>
                     </GroupBox>
                     <GroupBox Grid.Column="1" Header="Спарсить" HorizontalAlignment="Left" Height="106" Margin="10,0,0,0" VerticalAlignment="Bottom" Width="427">
@@ -119,15 +121,20 @@
                             <TextBox x:Name="TbParserFile" HorizontalAlignment="Left" Height="23" Margin="10,31,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="300"/>
                             <Button x:Name="BtSelectParserFile" Content="Выбрать" HorizontalAlignment="Left" Margin="330,34,0,0" VerticalAlignment="Top" Width="75" Click="BtSelectParserFile_Click"/>
                             <Button x:Name="BtStartParserDownloading" Content="Начать" HorizontalAlignment="Left" Margin="330,155,0,0" VerticalAlignment="Top" Width="75" Click="BtStartParserDownloading_Click"/>
+                            <CheckBox x:Name="CbSplitByFolder" Content="Распределять по папкам" HorizontalAlignment="Left" Margin="10,117,0,0" VerticalAlignment="Top" IsChecked="True" />
                         </Grid>
                     </GroupBox>
+                    <ProgressBar x:Name="PbParsingProgress" HorizontalAlignment="Left" Height="9" Margin="10,5,0,0" Grid.Row="2" VerticalAlignment="Top" Width="618" Grid.ColumnSpan="2"/>
+                    <StatusBar HorizontalAlignment="Left" Height="22" Margin="10,17,0,0" Grid.Row="2" VerticalAlignment="Top" Width="618" Grid.ColumnSpan="2">
+                        <StatusBarItem Margin="0,7,0,-7">
+                            <TextBlock Name="TbParserStatus" Text="" />
+                        </StatusBarItem>
+                    </StatusBar>
                 </Grid>
             </TabItem>
         </TabControl>
 
-        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" >
-            <ContentControl />
-        </xctk:BusyIndicator>
+
 
     </Grid>
 </Window>

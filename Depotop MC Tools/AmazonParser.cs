@@ -91,6 +91,8 @@ namespace Depotop_MC_Tools
             public string Size { get => m_Size; set => m_Size = value; }
             public string Ext { get => m_Ext; set => m_Ext = value; }
             public override string Url { get { return ServerPath + FullName; } }
+            public override string PreviewImageUrl { get { return ServerPath + m_Name + "._AC_UY218_ML3_" + m_Ext; } }
+            
             public override string BigImageUrl { get { return ServerPath + m_Name + m_Ext; } }
             public string ReBuild(ImageSize size)
             {
@@ -144,6 +146,7 @@ namespace Depotop_MC_Tools
 
             public string Url { get => m_Url; set => m_Url = value; }
             public string FullUrl { get => m_HomeUrl + m_Url; }
+            public override string PrewievUrl { get { if (ImageLinks.Count > 0) return ImageLinks[0].PreviewImageUrl; return ""; } }
             //public List<AmazonImageLink> ImageLinks { get => m_ImageLinks; set => m_ImageLinks = value; }
             public AmazonImageLink PrewievImage
             {
@@ -237,7 +240,7 @@ namespace Depotop_MC_Tools
 
                     amazonAnounces.Add(anounce);
 
-                    if (amazonAnounces.Count >= 3)
+                    if (amazonAnounces.Count >= 4)
                         break;
                 }
             }

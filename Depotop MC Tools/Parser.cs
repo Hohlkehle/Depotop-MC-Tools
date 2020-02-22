@@ -15,6 +15,7 @@ namespace Depotop_MC_Tools
         {
             public virtual string Url { get; }
             public virtual string BigImageUrl { get; }
+            public virtual string PreviewImageUrl { get; }
 
             public virtual int Compare(object x, object y)
             {
@@ -54,15 +55,39 @@ namespace Depotop_MC_Tools
         public string UserAgent { get => m_UserAgent; set => m_UserAgent = value; }
         public List<string> ImagesUrl { get => m_ImagesUrl; set => m_ImagesUrl = value; }
         public Dictionary<string, List<Anounce>> SearchResults { get => m_searchResults; set => m_searchResults = value; }
+        public int ResultsCount
+        {
+            get
+            {
+                int res = 0;
+                foreach (KeyValuePair<string, List<Anounce>> kvp in m_searchResults)
+                {
+                    res += kvp.Value.Count;
+                }
+                return res;
+            }
+        }
+        public List<Anounce> LastSearchResult
+        {
+            get
+            {
+                if (SearchResults.Count > 0)
+                    return SearchResults.Last().Value;
+                return new List<Anounce>();
+            }
+        }
         public HtmlWeb HtmlWebInstance { get => m_HtmlWeb; set => m_HtmlWeb = value; }
 
-        public virtual void Parse()
+        public IEnumerable<Anounce.LoadAnounceDataResult> Parse()
         {
+            int progress = 1;
             foreach (KeyValuePair<string, List<Anounce>> kvp in m_searchResults)
             {
                 foreach (var a in kvp.Value)
                 {
                     a.LoadAnounceData(this);
+                    yield return new Anounce.LoadAnounceDataResult(progress, a.PrewievUrl);
+                    progress++;
                 }
             }
         }
