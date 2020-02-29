@@ -19,6 +19,8 @@ using System.Windows.Shapes;
 using HtmlAgilityPack;
 using static Depotop_MC_Tools.AmazonParser;
 using System.Net;
+using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace Depotop_MC_Tools
 {
@@ -47,21 +49,24 @@ namespace Depotop_MC_Tools
     {
         FR, EN, RU, DE, IT
     }
+    public enum LangsKind
+    {
+        Male, Female, Middle
+    }
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        private List<string> m_WordToKey = new List<string>() { "FR", "EN", "RU", "DE", "IT" };
-        private List<string> m_AutoList = new List<string>() { "TOYOTA", "FORD", "CHEVROLET", "NISSAN", "KIA", "MERCEDES", "BMW", "OPEL", "MAZDA", "VOLKSWAGEN", "CITROEN", "VOLVO", "SKODA", "LAND", "RENAULT", "HONDA", "MITSUBISHI", "AUDI", "JEEP", "PEUGEOT", "LEXUS", "SUZUKI", "INFINITI", "FIAT", "MINI", "ALFA", "VW", "HYUNDAI", "CHRYSLER", "SAAB", "HUMMER", "JAGUAR", "CADILLAC", "SUBARU", "DAIHATSU", "DACIA", "DODGE", "SSANGYONG", "LANCIA", "ISUZU", "SSANG", "SMART", "PORSCHE", "IVECO", "SEAT", "DAEWOO", "MCLAREN" };
-
-        private Dictionary<string, string[]> m_SidesLang = new Dictionary<string, string[]>()
+        private List<string> _m_AutoList = new List<string>() { "TOYOTA", "FORD", "CHEVROLET", "NISSAN", "KIA", "MERCEDES", "BMW", "OPEL", "MAZDA", "VOLKSWAGEN", "CITROEN", "VOLVO", "SKODA", "LAND", "RENAULT", "HONDA", "MITSUBISHI", "AUDI", "JEEP", "PEUGEOT", "LEXUS", "SUZUKI", "INFINITI", "FIAT", "MINI", "ALFA", "VW", "HYUNDAI", "CHRYSLER", "SAAB", "HUMMER", "JAGUAR", "CADILLAC", "SUBARU", "DAIHATSU", "DACIA", "DODGE", "SSANGYONG", "LANCIA", "ISUZU", "SSANG", "SMART", "PORSCHE", "IVECO", "SEAT", "DAEWOO", "MCLAREN" };
+        private Dictionary<string, string[]> _m_SidesLang = new Dictionary<string, string[]>()
         {
             { "avant", new string[] {"avant", "front", "передний", "vorne", "anteriore"} },
             { "arriére", new string[] {"arriére", "rear", "задний", "hinten", "posteriore"} },
             { "arriere", new string[] {"arriére", "rear", "задний", "hinten", "posteriore"} },
             { "supérieur", new string[] {"supérieur", "upper", "верхний", "oben", "superiore"} },
             { "superieur", new string[] {"supérieur", "upper", "верхний", "oben", "superiore"} },
+            { "inférieur", new string[] {"inferieur", "lower", "нижний", "unten", "inferiore"} },
             { "inferieur", new string[] {"inferieur", "lower", "нижний", "unten", "inferiore"} },
             { "droite", new string[] {"droite", "right", "правый", "rechts", "destro"} },
             { "gauche", new string[] {"gauche", "left", "левый", "links", "sinistro"} },
@@ -70,8 +75,12 @@ namespace Depotop_MC_Tools
             { "pour", new string[] {"pour", "for", "для", "für", "per"} }
         };
 
+        private LangsKind m_LangsKind = LangsKind.Male;
+        private char m_TabChar = Convert.ToChar(9);
+        private List<string> m_AutoList;
+        private Dictionary<string, string[]> m_SidesLang;
         private Dictionary<string, string[]> m_Records;
-
+        private XDocument m_Dictionary;
         public string Autos { get { return String.Join(" ", m_AutoList.ToArray()); } }
 
         public List<string> Titles { get; set; }
@@ -92,17 +101,54 @@ namespace Depotop_MC_Tools
             Titles = new List<string>();
         }
 
+        private void LoadDictionary()
+        {
+            m_Dictionary = XDocument.Load(@"dictionary.xml");
+            m_SidesLang = new Dictionary<string, string[]>();
+
+            var query = from c in m_Dictionary.Root.Descendants("word") select c.Attributes();
+
+            foreach (var word in query)
+            {
+                var w = word.ToList();
+                string[] values = new string[] {
+                    w.Where(a => a.Name == "fr").FirstOrDefault().Value,
+                    w.Where(a => a.Name == "en").FirstOrDefault().Value,
+                    w.Where(a => a.Name == "ru").FirstOrDefault().Value,
+                    w.Where(a => a.Name == "de").FirstOrDefault().Value,
+                    w.Where(a => a.Name == "it").FirstOrDefault().Value
+                };
+                m_SidesLang.Add(w.Where(a => a.Name == "name").FirstOrDefault().Value, values);
+            }
+
+            m_AutoList = new List<string>();
+            var marques = m_Dictionary.Root.Descendants("marques").FirstOrDefault().Value;
+            m_AutoList = (from m in marques.Split(',').AsEnumerable()
+                          select m.Trim()).ToList<string>();
+        }
+
         private void ReadInputData()
         {
+            TbParserStatus.Text = "";
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            if (m_SidesLang == null || m_SidesLang.Count == 0)
+            {
+                LoadDictionary();
+            }
+
+
             _busyIndicator.IsBusy = true;
             TbOutputData.Text = "";
             m_Records.Clear();
             Titles = TbInputTitles.Text.Split(';').ToList<string>();
-
             var text = TbInputData.Text;
+            string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
+            PbParsingProgress.Maximum = lines.Length - 1;
+            PbParsingProgress.Value = 1;
+            var resultLines = new List<string>();
             Task.Factory.StartNew(() =>
             {
-                string[] lines = text.Split(new string[] { "\r\n" }, StringSplitOptions.None);
                 var autos = String.Join("|", m_AutoList.ToArray());
                 for (var i = 0; i < lines.Length; i++)
                 {
@@ -111,13 +157,21 @@ namespace Depotop_MC_Tools
 
                     var marque = "";
                     var sides = "";
-                    var items = lines[i].Split(new[] { ';' });
-
+                    //var items = lines[i].Split(new[] { ';' });
+                    var items = lines[i].Split(m_TabChar);
+                    if (items.Length < 3)
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            TbParserStatus.Text = "Input data format error!";
+                        });
+                        continue;
+                    }
                     var pattern = @"(" + autos + ")";
-                    var content = items[1];
+                    var content = items[1].Replace("è", "e");
+                    content = content.Replace("é", "e");
                     Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
                     Match match = rgx.Match(content);
-
 
                     if (match.Success)
                     {
@@ -135,8 +189,7 @@ namespace Depotop_MC_Tools
                         else
                             continue;
                     }
-                    pattern = "(avant|arriére|arriere|supérieur|superieur|inferieur|droite|gauche|longitudinal|transversal)";
-                    content = items[1];
+                    pattern = "(avant|arriere|superieur|inferieur|droite|gauche|longitudinal|transversal)";
                     MatchCollection matchList = Regex.Matches(content, pattern, RegexOptions.IgnoreCase);
                     var sidesList = matchList.Cast<Match>().Select(m => m.Value.ToLower().Trim()).ToList();
                     var uniquesidesList = new HashSet<string>(sidesList);
@@ -144,7 +197,8 @@ namespace Depotop_MC_Tools
 
                     var title = new TitleData(items[0], marque, sides, items[2]);
 
-
+                    if (m_Records.ContainsKey(items[0]))
+                        items[0] += RandomString(4);
                     m_Records.Add(items[0], new[] { items[2], marque, sides });
 
                     var output = String.Format("{0}\t{1}\t{2}\t{3}\t{4}",
@@ -154,13 +208,23 @@ namespace Depotop_MC_Tools
                         FormatTitle(title, Langs.DE),
                         FormatTitle(title, Langs.IT));
 
+                    resultLines.Add(output);
+
                     Dispatcher.Invoke(() =>
                     {
-                        TbOutputData.Text += output;
-                        TbOutputData.Text += "\r\n";
-                        _busyIndicator.IsBusy = false;
+                        PbParsingProgress.Value = i + 1;
                     });
                 }
+                Dispatcher.Invoke(() =>
+                {
+                    PbParsingProgress.Value = 0;
+                    PbParsingProgress.Maximum = 100;
+                    _busyIndicator.IsBusy = false;
+
+                    TbOutputData.Text = String.Join("\r\n", resultLines.ToArray());
+                    stopwatch.Stop();
+                    TbParserStatus.Text = string.Format("Elapsed Time is {0} ms", stopwatch.ElapsedMilliseconds);
+                });
             });
         }
 
@@ -187,13 +251,36 @@ namespace Depotop_MC_Tools
             if (sides == string.Empty)
                 return "";
 
-            return String.Format("{0} ", sides);
+            return String.Format(" {0}", sides);
         }
 
         private string Translate(string word, Langs lang)
         {
             if (!m_SidesLang.ContainsKey(word))
                 return "UNKNOWN";
+            if (lang == Langs.RU)
+            {
+                var ru = m_SidesLang[word][(int)lang];
+                if (m_LangsKind == LangsKind.Male)
+                {
+                    // ...
+                    return ru;
+                }
+                else if (m_LangsKind == LangsKind.Female)
+                {
+                    //нижний
+                    //правый
+                    ru = ru.Replace("ий", "яя");
+                    ru = ru.Replace("ый", "ая");
+                    return ru;
+                }
+                else if (m_LangsKind == LangsKind.Middle)
+                {
+                    ru = ru.Replace("ий", "ее");
+                    ru = ru.Replace("ый", "ое");
+                    return ru;
+                }
+            }
             return m_SidesLang[word][(int)lang];
         }
 
@@ -226,6 +313,37 @@ namespace Depotop_MC_Tools
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ReadInputData();
+        }
+
+        private void RbTitlesKinds_Checked(object sender, RoutedEventArgs e)
+        {
+            var pressed = (System.Windows.Controls.RadioButton)sender;
+            if ((string)pressed.Content == "Муж")
+            {
+                m_LangsKind = LangsKind.Male;
+
+            }
+            else if ((string)pressed.Content == "Жен")
+            {
+                m_LangsKind = LangsKind.Female;
+            }
+            else if ((string)pressed.Content == "Сред")
+            {
+                m_LangsKind = LangsKind.Middle;
+            }
+        }
+
+        private void BtCopyTitlesResult_Click(object sender, RoutedEventArgs e)
+        {
+            if (TbOutputData.Text == "")
+            {
+                TbParserStatus.Text = "Нечего копировать!";
+            }
+            else
+            {
+                System.Windows.Clipboard.SetText(TbOutputData.Text);
+                TbParserStatus.Text = "Скопировано в буфер обмена!";
+            }
         }
         #endregion
 
@@ -363,14 +481,15 @@ namespace Depotop_MC_Tools
                 if (lines[i] == string.Empty)
                     continue;
 
-                var items = lines[i].Split(new string[] { " " }, StringSplitOptions.None);
+                //var line = lines[i].Replace(@"\t", ";");
+                var items = lines[i].Split(m_TabChar);
                 input.Add(items);
                 PbParsingProgress.Value = input.Count;
             }
             return input;
         }
 
-        private void BtnStartParce_Click(object sender, RoutedEventArgs e)
+        private void BtnStartParse_Click(object sender, RoutedEventArgs e)
         {
             TbParserStatus.Text = "Parsing started";
             var input = ParseInputData();
@@ -558,9 +677,18 @@ namespace Depotop_MC_Tools
             }
             return result;
         }
+
         #endregion
 
+        private static Random random = new Random();
+        public static string RandomString(int length)
+        {
+            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+              .Select(s => s[random.Next(s.Length)]).ToArray());
+        }
 
+       
     }
 }
 

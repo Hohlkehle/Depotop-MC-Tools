@@ -18,7 +18,7 @@ namespace Depotop_MC_Tools
         public string SearchUrl { get => m_SearchUrl; set => m_SearchUrl = value; }
 
 
-        private string m_SearchUrl = "https://www.amazon.com/s?k=";
+        private string m_SearchUrl = "https://www.amazon.com/s?s=date-desc-rank&k=";
 
         public AmazonParser(string downloadDir) : base()
         {

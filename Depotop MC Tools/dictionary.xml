@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dictionary>
+	<marques>TOYOTA, FORD, CHEVROLET, NISSAN, KIA, MERCEDES, BMW, OPEL, MAZDA, VOLKSWAGEN, CITROEN, VOLVO, SKODA, LAND, RENAULT, HONDA, MITSUBISHI, AUDI, JEEP, PEUGEOT, LEXUS, SUZUKI, INFINITI, FIAT, MINI, ALFA, VW, HYUNDAI, CHRYSLER, SAAB, HUMMER, JAGUAR, CADILLAC, SUBARU, DAIHATSU, DACIA, DODGE, SSANGYONG, LANCIA, ISUZU, SSANG, SMART, PORSCHE, IVECO, SEAT, DAEWOO, MCLAREN
+	</marques>
+	<word name="pour" fr="pour" en="for" ru="для" de="für" it="per" />
+	<word name="avant" fr="avant" en="front" ru="передний" de="vorne" it="anteriore" />
+	<word name="arriere" fr="arriére" en="rear" ru="задний" de="hinten" it="posteriore" />
+	<word name="superieur" fr="supérieur" en="upper" ru="верхний" de="oben" it="superiore" />
+	<word name="inferieur" fr="inferieur" en="lower" ru="нижний" de="unten" it="inferiore" />
+	<word name="droite" fr="droite" en="right" ru="правый" de="rechts" it="destro" />
+	<word name="gauche" fr="gauche" en="left" ru="левый" de="links" it="sinistro" />
+	<word name="longitudinal" fr="longitudinal" en="longitudinal" ru="продольный" de="entlang" it="longitudinale" />
+	<word name="transversal" fr="transversal" en="transverse" ru="поперечный" de="quer" it="trasversale" />
+</dictionary>
