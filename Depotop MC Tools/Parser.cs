@@ -11,6 +11,22 @@ namespace Depotop_MC_Tools
 {
     public class Parser
     {
+        public enum ImageSize
+        {
+            //_SL1500_
+            //_AC_UY218_ML3_
+            //_SX355_
+            //_SX425_
+            //_SX450_
+            //_SX466_
+            //_SX522_
+            //_SX569_
+            //_SX679_
+
+            Preview, // _AC_UY218_ML3_
+            Original, // 
+            FullSize // _SL1500_
+        }
         public class ImageLink : IComparer, IComparable
         {
             public virtual string Url { get; }
@@ -46,12 +62,12 @@ namespace Depotop_MC_Tools
             public string Sku { get => m_Sku; set => m_Sku = value; }
         }
         protected HtmlWeb m_HtmlWeb;
-        protected string m_SearchStr = "";
+        protected string m_KeyWords = "";
         protected string m_UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win32; x86) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.116 ";
         protected List<string> m_ImagesUrl;
         protected Dictionary<string, List<Anounce>> m_searchResults;
         public Parser() { m_ImagesUrl = new List<string>(); }
-        public string SearchStr { get => m_SearchStr; set => m_SearchStr = value; }
+        public string Keywords { get => m_KeyWords; set => m_KeyWords = value; }
         public string UserAgent { get => m_UserAgent; set => m_UserAgent = value; }
         public List<string> ImagesUrl { get => m_ImagesUrl; set => m_ImagesUrl = value; }
         public Dictionary<string, List<Anounce>> SearchResults { get => m_searchResults; set => m_searchResults = value; }

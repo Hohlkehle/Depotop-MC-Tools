@@ -3,23 +3,22 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Depotop_MC_Tools
 {
-    public class AmazonParser : Parser
+    public class FebestParser : Parser
     {
-        public class AmazonImageLink : ImageLink
+        public class FebestImageLink : ImageLink
         {
             private string m_Src;
             private string m_ServerPath;
             private string m_Name;
             private string m_Size;
             private string m_Ext;
-            public AmazonImageLink(string src)
+            public FebestImageLink(string src)
             {
                 m_Src = src;
 
@@ -31,10 +30,10 @@ namespace Depotop_MC_Tools
 
                 if (match.Success)
                 {
-                    imgName = match.Value.Trim(); // 71nCl5DivdL._AC_UY218_ML3_.jpg
+                    imgName = match.Value.Trim(); // BZAB-016.jpg
                     m_Ext = Path.GetExtension(imgName);
                     m_Name = imgName.Split('.')[0];
-                    m_Size = imgName.Split('.')[1];
+                    m_Size = "450x450"; // imgName.Split('.')[1];
                     m_ServerPath = src.Split(new string[] { imgName }, StringSplitOptions.None)[0];
                 }
                 else
@@ -42,8 +41,7 @@ namespace Depotop_MC_Tools
                     // error
                 }
             }
-
-            public AmazonImageLink(AmazonImageLink link)
+            public FebestImageLink(FebestImageLink link)
             {
                 if (link == null)
                     return;
@@ -56,117 +54,89 @@ namespace Depotop_MC_Tools
             public string Src { get => m_Src; set => m_Src = value; }
             public string ServerPath { get => m_ServerPath; set => m_ServerPath = value; }
             public string Name { get => m_Name; set => m_Name = value; }
-            public string FullName { get => m_Name + "." + m_Size + m_Ext; }
+            public string FullName { get => m_Name + m_Ext; }
             public string Size { get => m_Size; set => m_Size = value; }
             public string Ext { get => m_Ext; set => m_Ext = value; }
             public override string Url { get { return ServerPath + FullName; } }
-            public override string PreviewImageUrl { get { return ServerPath + m_Name + "._AC_UY218_ML3_" + m_Ext; } }
-            public override string BigImageUrl { get { return ServerPath + m_Name + m_Ext; } }
-
+            public override string PreviewImageUrl { get { return ServerPath + FullName; } }
+            public override string BigImageUrl { get { return PreviewImageUrl; } }
             public string ReBuild(ImageSize size)
             {
-                var s = "_AC_UY218_ML3_";
-                if (size == ImageSize.FullSize)
-                {
-                    s = "_SL1500_";
-
-                }
-                else
-                {
-
-                }
-                Size = s;
-                //https://m.media-amazon.com/images/I/71nCl5DivdL._AC_UY218_ML3_.jpg
-                Src = string.Format("{0}{1}.{2}{3}", ServerPath, m_Name, Size, Ext);
-                return Src;
+                Size = "450x450";
+                //https://shop.febest.eu/media/catalog/product/cache/all/image/450x450/9df78eab33525d08d6e5fb8d27136e95/base/p/BZAB-016.jpg
+                return BigImageUrl;
             }
 
             public override int Compare(object x, object y)
             {
-                if (((AmazonImageLink)x).Name == ((AmazonImageLink)y).Name) return 1;
+                if (((FebestImageLink)x).Name == ((FebestImageLink)y).Name) return 1;
                 return 0;
             }
 
             public override int CompareTo(object obj)
             {
-                AmazonImageLink c = (AmazonImageLink)obj;
-                if (this.Name == c.Name)
+                FebestImageLink c = (FebestImageLink)obj;
+                if (this.Src == c.Src)
                     return 1;
                 return 0;
             }
         }
 
-        public class AmazonAnounce : Anounce
+        public class FebestAnounce : Anounce
         {
-            private string m_HomeUrl = "https://www.amazon.com";
+            private string m_HomeUrl = "https://shop.febest.eu";
             private string m_Url;
-            public AmazonAnounce(string url, AmazonImageLink prewievImage)
+            public FebestAnounce(string url, FebestImageLink prewievImage)
             {
                 m_Url = url;
                 ImageLinks = new List<ImageLink>();
                 ImageLinks.Add(prewievImage);
             }
 
-            public AmazonAnounce(string url, List<ImageLink> images)
+            public FebestAnounce(string url, List<ImageLink> images)
             {
                 m_Url = url;
                 ImageLinks = images;
             }
 
             public string Url { get => m_Url; set => m_Url = value; }
-            public string FullUrl { get => m_HomeUrl + m_Url; }
+            public string FullUrl { get => m_Url; }
             public override string PrewievUrl { get { if (ImageLinks.Count > 0) return ImageLinks[0].PreviewImageUrl; return ""; } }
             //public List<AmazonImageLink> ImageLinks { get => m_ImageLinks; set => m_ImageLinks = value; }
-            public AmazonImageLink PrewievImage
+            public FebestImageLink PrewievImage
             {
                 get
                 {
-                    if (ImageLinks.Count > 0) return (AmazonImageLink)ImageLinks[0]; return null;
+                    if (ImageLinks.Count > 0) return (FebestImageLink)ImageLinks[0]; return null;
                 }
             }
 
             public override void LoadAnounceData(Parser parser)
             {
                 var htmlDoc = parser.HtmlWebInstance.LoadFromBrowser(FullUrl);
-                //var nodes = htmlDoc.DocumentNode.SelectNodes(".//");
-                //images/I/([^.]+)[.]_SL
-                var startSplit = "ImageBlockATF"; // - split 1
-                var endSplit = "trigger ATF event"; // - split 2
-                var html = htmlDoc.DocumentNode;
-                var htmlStr = html.OuterHtml;
-                var pattern = @"images/I/([^.]+)[.]";
-                string[] pageSplit = null, pageSplit2 = null;
-                string strForMatch = "";
-                pageSplit = htmlStr.Split(new string[] { startSplit }, StringSplitOptions.None);
-
-                if (pageSplit != null && pageSplit.Length == 2)
+                var nodes = htmlDoc.DocumentNode.SelectNodes(".//li[contains(@class, 'thumbnail-item')]");//thumbnail-item bx-clone
+                if (nodes != null)
                 {
-                    pageSplit2 = pageSplit[1].Split(new string[] { endSplit }, StringSplitOptions.None);
-                }
-                if (pageSplit2 != null && pageSplit2.Length == 2)
-                    strForMatch = pageSplit2[0];
-
-                MatchCollection matchList = Regex.Matches(strForMatch, pattern, RegexOptions.IgnoreCase);
-                foreach (Match match in matchList)
-                {
-                    if (match.Groups.Count > 1)
+                    foreach (HtmlNode item in nodes)
                     {
-                        var iName = match.Groups[1].Value;
-                        var link = new AmazonImageLink(PrewievImage);
-                        link.Name = iName;
-                        var contains = false;
-                        foreach (var im in ImageLinks)
+                        var imgUrl = "";
+                        var postNode = item.SelectSingleNode(".//a[contains(@class, 'cloud-zoom-gallery')]");
+                        if (postNode != null)
                         {
-                            if (link.CompareTo(im) == 1)
-                            {
-                                contains = true;
-                            }
-                        }
+                            var pn = postNode.Attributes.FirstOrDefault(u => u.Name == "href");
+                            imgUrl = pn.Value;
+                            var link = new FebestImageLink(imgUrl);
+                            var contains = false;
 
-                        if (!contains)
-                        {
-                            link.ReBuild(ImageSize.FullSize);
-                            ImageLinks.Add(link);
+                            foreach (var im in ImageLinks)
+                                if (link.CompareTo(im) == 1)
+                                    contains = true;
+
+                            if (!contains)
+                            {
+                                link.ReBuild(ImageSize.FullSize);
+                                ImageLinks.Add(link);
+                            }
                         }
                     }
                 }
@@ -174,36 +144,35 @@ namespace Depotop_MC_Tools
             }
         }
 
-        private string m_DownloadDir;
-        private string m_SearchUrl = "https://www.amazon.com/s?s=date-desc-rank&k=";
+        private string m_SearchUrl = "https://shop.febest.eu/catalogsearch/result/?q=";
 
-        public string DownloadDir { get => m_DownloadDir; set => m_DownloadDir = value; }
         public string SearchUrl { get => m_SearchUrl; set => m_SearchUrl = value; }
 
-        public AmazonParser(string downloadDir) : base()
+        public FebestParser() : base()
         {
-            m_DownloadDir = downloadDir;
+
         }
 
         public override void Initialize()
         {
             base.Initialize();
+            m_HtmlWeb.BrowserTimeout = TimeSpan.FromSeconds(40);
         }
 
         public override void Search(string id, string searchStr)
         {
             var htmlDoc = m_HtmlWeb.LoadFromBrowser(SearchUrl + searchStr);
 
-            var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 's-result-item')]");
-            var m_ImageLink = new List<AmazonImageLink>();
-            var amazonAnounces = new List<Anounce>();
+            var nodes = htmlDoc.DocumentNode.SelectNodes("//div[contains(@class, 'ma-box-content')]");
+            var m_ImageLink = new List<FebestImageLink>();
+            var anounces = new List<Anounce>();
 
             if (nodes != null)
             {
                 foreach (HtmlNode item in nodes)
                 {
                     var postUrl = "";
-                    var postNode = item.SelectSingleNode(".//a[contains(@class, 'a-link-normal')]");
+                    var postNode = item.SelectSingleNode(".//a[contains(@class, 'product-image')]");
                     if (postNode != null)
                     {
                         var pn = postNode.Attributes.FirstOrDefault(u => u.Name == "href");
@@ -216,15 +185,17 @@ namespace Depotop_MC_Tools
 
                     var src = iurlNode.Attributes.FirstOrDefault(u => u.Name == "src");
 
-                    var anounce = new AmazonAnounce(postUrl, new AmazonImageLink(src.Value));
+                    var anounce = new FebestAnounce(postUrl, new FebestImageLink(src.Value));
 
-                    amazonAnounces.Add(anounce);
+                    anounces.Add(anounce);
 
-                    if (amazonAnounces.Count >= 4)
+                    if (anounces.Count >= 4)
                         break;
                 }
             }
-            m_searchResults.Add(id, amazonAnounces);
+            m_searchResults.Add(id, anounces);
         }
+
+
     }
 }

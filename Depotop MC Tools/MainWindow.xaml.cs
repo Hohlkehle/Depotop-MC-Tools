@@ -493,32 +493,38 @@ namespace Depotop_MC_Tools
         {
             TbParserStatus.Text = "Parsing started";
             var input = ParseInputData();
-            Parser m_AmazonParser = new AmazonParser(null);
-            m_AmazonParser.Initialize(/*HtmlWeb params*/);
+            Parser parser = GetSelectedParser();
+            if(parser == null)
+            {
+                System.Windows.MessageBox.Show("Ошибка при выборе парсера!");
+                return;
+            }
+
             PbParsingProgress.Maximum = input.Count;
+            parser.Initialize(/*HtmlWeb params*/);
+            parser.Keywords = BtParserKeywords.Text;
             var i = 0;
             foreach (var line in input)
             {
                 var sku = line[0];
                 var oe = line[1];
-                m_AmazonParser.SearchStr = oe;
-                m_AmazonParser.Search(sku, oe);
+                
+                parser.Search(sku, oe);
 
                 TbParserStatus.Text = "Parsing images links for " + sku;
 
-                if (m_AmazonParser.LastSearchResult.Count > 0)
+                if (parser.LastSearchResult.Count > 0)
                 {
-                    UpdateParserImagePrewiev(m_AmazonParser.LastSearchResult[0].PrewievUrl);
+                    UpdateParserImagePrewiev(parser.LastSearchResult[0].PrewievUrl);
                 }
-
-                i++;
                 PbParsingProgress.Value = i;
+                i++;
             }
 
             TbParserStatus.Text = "Parsing anounces links..";
 
-            PbParsingProgress.Maximum = m_AmazonParser.ResultsCount - 1;
-            foreach (var result in m_AmazonParser.Parse())
+            PbParsingProgress.Maximum = parser.ResultsCount - 1;
+            foreach (var result in parser.Parse())
             {
                 PbParsingProgress.Value = result.Index;
                 UpdateParserImagePrewiev(result.ImgUrl);
@@ -529,12 +535,12 @@ namespace Depotop_MC_Tools
             try
             {
                 System.IO.File.Delete("output.csv");
-                m_AmazonParser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
+                parser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
             }
             catch (Exception ex)
             {
                 var rfileName = "output" + System.IO.Path.GetRandomFileName() + ".csv";
-                m_AmazonParser.DumpResultToCsv(System.IO.Path.Combine(exp, rfileName));
+                parser.DumpResultToCsv(System.IO.Path.Combine(exp, rfileName));
                 System.Windows.MessageBox.Show(ex.Message);
                 System.Windows.MessageBox.Show("File saved as " + rfileName);
             }
@@ -542,6 +548,28 @@ namespace Depotop_MC_Tools
             UpdateParserImagePrewiev(null);
             TbParserStatus.Text = "Parsing done";
             //System.Windows.MessageBox.Show("Парсиг завершен!");
+        }
+
+        private Parser GetSelectedParser()
+        {
+            Parser p = null;
+            var selectedParser = CbParserType.SelectedIndex;
+            // Amazon
+            if(selectedParser == 0)
+            {
+                p = new AmazonParser(null);
+            }
+            else // Ebay
+            if (selectedParser == 1)
+            {
+
+            }
+            else // Febest
+            if (selectedParser == 2)
+            {
+                p = new FebestParser();
+            }
+            return p;
         }
 
         private void BtnSelectParserOutDir_Click(object sender, RoutedEventArgs e)
@@ -630,6 +658,7 @@ namespace Depotop_MC_Tools
                     TbParserStatus.Text = "Downloading done";
                 });
             });
+            _busyIndicator.IsBusy = false;
         }
 
         private void UpdateParserImagePrewiev(string uri)
@@ -687,8 +716,6 @@ namespace Depotop_MC_Tools
             return new string(Enumerable.Repeat(chars, length)
               .Select(s => s[random.Next(s.Length)]).ToArray());
         }
-
-       
     }
 }
 

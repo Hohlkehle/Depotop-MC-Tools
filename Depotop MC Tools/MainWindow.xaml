@@ -108,13 +108,16 @@
                                  TextWrapping="Wrap" AcceptsReturn="True"
                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                                  Text="" VerticalAlignment="Top"/>
-                            <Image x:Name="IParserImagePreview" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
-                        </Grid>
+                                <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,176,0,46">
+                                    <Image x:Name="IParserImagePreview" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
+
+                                </Border>
+                         </Grid>
                     </GroupBox>
                     <GroupBox Grid.Column="1" Header="Спарсить" HorizontalAlignment="Left" Height="100" Margin="10,0,0,187" VerticalAlignment="Bottom" Width="427" Grid.RowSpan="2">
                         <Grid Margin="0,0,0,23">
                             <ComboBox Name="CbParserType" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" Width="158" Height="22">
-                                <ComboBoxItem Content="Amazon" />
+                                <ComboBoxItem Content="Amazon" IsSelected="True" />
                                 <ComboBoxItem Content="Ebay" />
                                 <ComboBoxItem Content="Febest" />
                             </ComboBox>
