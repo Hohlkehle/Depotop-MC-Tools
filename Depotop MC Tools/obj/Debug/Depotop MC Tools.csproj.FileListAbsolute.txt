@@ -47,3 +47,11 @@ D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csp
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.dll
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.pdb
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.DirectShow.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Newtonsoft.Json.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.DirectShow.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Newtonsoft.Json.xml
