@@ -54,6 +54,39 @@ namespace Depotop_MC_Tools
             return m_DwnList.Count;
         }
 
+        public int LoadDataWithVerify(System.Data.SQLite.SQLiteConnection sQLiteConnection, dynamic opt)
+        {
+            m_DwnList = new List<string[]>();
+            try
+            {
+                using (var reader = new StreamReader(m_CsvFile))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var values = line.Split(';');
+                        if (!Uri.IsWellFormedUriString(values[1], UriKind.Absolute))
+                            continue;
+
+                        //SELECT * FROM anounces WHERE url='' depotop=1 AND img IS NOT NULL AND img != "";
+                        //SELECT COUNT(*) FROM anounces WHERE url='' depotop=1 AND img IS NOT NULL AND img != "";
+                        var cmd = new System.Data.SQLite.SQLiteCommand("SELECT COUNT(*) FROM anounces WHERE url=@url AND depotop=@depotop AND img IS NOT NULL AND img != ''", sQLiteConnection);
+
+                        cmd.Parameters.AddWithValue("@url", values[1]);
+                        cmd.Parameters.AddWithValue("@depotop", opt.depotop);
+                        var count = (long)cmd.ExecuteScalar();
+
+                        if (count != 0)
+                            continue;
+
+                        m_DwnList.Add(values);
+                    }
+                }
+            }
+            catch (Exception ex) { System.Windows.MessageBox.Show(ex.Message); }
+            return m_DwnList.Count;
+        }
+
         public Parser InitializeParser()
         {
             if (m_DwnList.Count == 0)

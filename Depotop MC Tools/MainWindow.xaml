@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Depotop_MC_Tools"
         xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         mc:Ignorable="d"
-        Title="Depotop Tools" Height="451.027" Width="652.118">
+        Title="Depotop Tools" Height="451.027" Width="652.118" Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="13*"/>
@@ -162,7 +162,7 @@
                         <ColumnDefinition/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <GroupBox Header="Спарсить ссылки на изображения" Grid.Row="0" Grid.Column="0" Margin="0,0,0,0">
+                    <GroupBox Header="Данные для обработки" Grid.Row="0" Grid.Column="0" Margin="0,0,0,0">
                         <StackPanel Orientation="Vertical" Grid.Row="0">
                             <StackPanel Orientation="Vertical">
                                 <TextBlock TextWrapping="Wrap"><Run Text="Таблица с изображениями depotop"/></TextBlock>
@@ -178,26 +178,71 @@
                                     <Button x:Name="BtnICCSelectSecondTable" Content="Выбрать" Margin="10,0,10,0" RenderTransformOrigin="0.5,0.696" Click="BtnICCSelectSecondTable_Click"/>
                                 </StackPanel>
                             </StackPanel>
-                            <StackPanel Orientation="Vertical">
 
+                        </StackPanel>
+                    </GroupBox>
+                    <GroupBox Header="Опции" Grid.Row="0" Grid.Column="1" Margin="0,0,0,0">
+                        <StackPanel Orientation="Vertical" Grid.Row="0">
+                            <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                    <Button x:Name="BtnICDownload" Content="Cпарсить" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICStartParse_Click"/>
-                                    <Button x:Name="BtnICCompare" Content="Сравнить" Margin="0,5,10,5" Padding="5,2,5,2"/>
-                                    <Button x:Name="BtnICGetOutput" Content="Выгрузить" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                    <CheckBox x:Name="CBICParseData" Content="Спарсить или" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
+                                    <CheckBox x:Name="CBICResetData" Content="Сбросить или" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
+                                    <CheckBox x:Name="CBICEarseAll" Content="Удалить " Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
+
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+
+                                    <CheckBox x:Name="CBICDeepAICompare" Content="Сравнить в DeepAI" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
+                                    <CheckBox x:Name="CBICManualCompare" Content="Сравнить вручную" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                    <Button x:Name="BtnICDownload" Content="Выполнить" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICStartParse_Click"/>
+
+
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
+                    <GroupBox Header="Ручная обработка" Grid.Row="1" Grid.ColumnSpan="2"  Margin="0,0,0,0">
+                        <StackPanel Orientation="Vertical" Grid.Row="1" Grid.ColumnSpan="2">
+
+                            <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0" >
+                                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Height="200" Width="220">
+                                        <Image x:Name="IComparerImagePreview1"   Margin="0,0,0,0"  />
+
+                                    </Border>
+                                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="10,2,0,10" Height="200" Width="220">
+                                        <Image x:Name="IComparerImagePreview2"   Margin="0,0,0,0"  />
+
+                                    </Border>
+                                    <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                            <CheckBox  Content="Пропускать похожие" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                            <Button  Content="Одинаковые" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                            <Button  Content="Разные" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </GroupBox>
 
 
-                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Grid.Row="1">
-                        <Image x:Name="IComparerImagePreview1" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
-
-                    </Border>
-                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Grid.Column="1" Grid.Row="1">
-                        <Image x:Name="IComparerImagePreview2" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
-
-                    </Border>
                 </Grid>
             </TabItem>
         </TabControl>

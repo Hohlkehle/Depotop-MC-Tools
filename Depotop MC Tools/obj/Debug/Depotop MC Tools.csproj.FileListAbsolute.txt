@@ -92,3 +92,12 @@ U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\De
 U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.SqlServer.xml
 U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.xml
 U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.dll.config
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.SqlServer.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.EF6.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.Linq.dll
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.SqlServer.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.xml
+D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.dll.config

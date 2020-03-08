@@ -713,6 +713,23 @@ namespace Depotop_MC_Tools
         #endregion
 
         #region Image Comparer Tab
+        private SQLiteConnection m_SQLiteConnection = null;
+        private string m_ICConnectionString = @"Data Source=imagecomparer.db; Version=3;";
+        private void OpenSqlConnection(string connectionString)
+        {
+            if (m_SQLiteConnection == null || m_SQLiteConnection.State != System.Data.ConnectionState.Open)
+            {
+                m_SQLiteConnection = new SQLiteConnection(connectionString);
+                m_SQLiteConnection.Open();
+            }
+        }
+
+        private void CloseSqlConnection()
+        {
+            if (m_SQLiteConnection != null && m_SQLiteConnection.State == System.Data.ConnectionState.Open)
+                m_SQLiteConnection.Close();
+        }
+
         private void InitializeImageComparer()
         {
             if (!File.Exists(@"imagecomparer.db"))
@@ -720,20 +737,19 @@ namespace Depotop_MC_Tools
                 SQLiteConnection.CreateFile(@"imagecomparer.db");
             }
 
-            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=imagecomparer.db; Version=3;"))
-            {
-                string commandText = "CREATE TABLE  IF NOT EXISTS anounces (" +
-                                        "id INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                                        "sku VARCHAR(20), " +
-                                        "url VARCHAR(50), " +
-                                        "img VARCHAR(100), " +
-                                        "depotop BOOLEAN(1), " +
-                                        "similarity INTEGER(3))";
-                SQLiteCommand Command = new SQLiteCommand(commandText, conn);
-                conn.Open();
-                Command.ExecuteNonQuery();
-                conn.Close();
-            }
+            OpenSqlConnection(m_ICConnectionString);
+
+            string commandText = "CREATE TABLE  IF NOT EXISTS anounces (" +
+                                       "id INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                                       "sku VARCHAR(20), " +
+                                       "url VARCHAR(50), " +
+                                       "img VARCHAR(100), " +
+                                       "depotop BOOLEAN(1), " +
+                                       "similarity INTEGER(3))";
+            SQLiteCommand cmd = new SQLiteCommand(commandText, m_SQLiteConnection);
+
+            cmd.ExecuteNonQuery();
+            CloseSqlConnection();
         }
 
         private void BtnICCSelectFirstTable_Click(object sender, RoutedEventArgs e)
@@ -746,6 +762,108 @@ namespace Depotop_MC_Tools
             TBICSecondTableFile.Text = OpenCsvFileDialog();
         }
 
+        private void ProgressUp()
+        {
+            PbParsingProgress.Value++;
+        }
+
+        private void SetupProgressBar(int max, string statusText = "")
+        {
+            PbParsingProgress.Maximum = max;
+            PbParsingProgress.Value = 0;
+            if (!string.IsNullOrEmpty(statusText))
+                TbParserStatus.Text = statusText;
+        }
+
+        private void ICUpdateImagePreview(Image image, string uri)
+        {
+            if (uri == null)
+            {
+                image.Source = null;
+                return;
+            }
+            try
+            {
+                BitmapImage bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(uri, UriKind.Absolute);
+                bitmap.EndInit();
+                image.Source = bitmap;
+            }
+            catch (Exception) { }
+        }
+
+        private int ICStoreItemToDatabase(EbayParser.LoadEbayAnounceDataResult record, bool isDepotop, int similarity)
+        {
+            string sql = "INSERT INTO anounces (similarity, depotop, img, url, sku) VALUES (@similarity, @depotop, @img, @url, @sku)";
+            SQLiteCommand cmd = new SQLiteCommand(sql, m_SQLiteConnection);
+            cmd.Parameters.AddWithValue("@similarity", similarity);
+            cmd.Parameters.AddWithValue("@depotop", isDepotop);
+            cmd.Parameters.AddWithValue("@img", record.ImgUrl);
+            cmd.Parameters.AddWithValue("@url", record.Url);
+            cmd.Parameters.AddWithValue("@sku", record.Key);
+
+            return cmd.ExecuteNonQuery();
+        }
+
+        private void ICResetData(EbayImgExtractor ie)
+        {
+            var loadedlines = ie.LoadData();
+            SetupProgressBar(loadedlines, "Reseting data...");
+            var cmd = new SQLiteCommand("UPDATE anounces SET similarity=@similarity WHERE url=@url AND sku=@sku", m_SQLiteConnection);
+            foreach (var item in ie.DwnList)
+            {
+                if (!Uri.IsWellFormedUriString(item[1], UriKind.Absolute))
+                    continue;
+                cmd.Parameters.AddWithValue("@similarity", -1);
+                cmd.Parameters.AddWithValue("@url", item[1]);
+                cmd.Parameters.AddWithValue("@sku", item[0]);
+                cmd.ExecuteNonQuery();
+                ProgressUp();
+            }
+        }
+
+        private void ICDeleteData(EbayImgExtractor ie)
+        {
+            var loadedlines = ie.LoadData();
+            SetupProgressBar(loadedlines, "Deleting data...");
+            var cmd = new SQLiteCommand("DELETE FROM anounces WHERE url=@url AND sku=@sku", m_SQLiteConnection);
+            foreach (var item in ie.DwnList)
+            {
+                if (!Uri.IsWellFormedUriString(item[1], UriKind.Absolute))
+                    continue;
+                cmd.Parameters.AddWithValue("@url", item[1]);
+                cmd.Parameters.AddWithValue("@sku", item[0]);
+                cmd.ExecuteNonQuery();
+                ProgressUp();
+            }
+        }
+
+        private void ICParseData(EbayImgExtractor ie, int isDepotop)
+        {
+            var loadedlines = ie.LoadDataWithVerify(m_SQLiteConnection, new { depotop = isDepotop });
+
+            if (loadedlines == 0)
+                SetupProgressBar(0, string.Format("Nothing to parsing for {0}..", isDepotop == 1 ? "depotop" : "other"));
+
+            // Initialize parser for image extractor
+            ie.InitializeParser();
+
+            SetupProgressBar(loadedlines, string.Format("Parsing images for {0} anounces..", isDepotop == 1 ? "depotop" : "other"));
+
+            foreach (var result in ie.ExtractNext())
+            {
+                // Store to database
+                int dbRes = ICStoreItemToDatabase(result, isDepotop == 1, -1);
+
+                // Update Views
+                TbParserStatus.Text = "Parsing images for " + result.Key;
+                PbParsingProgress.Value++;
+                ICUpdateImagePreview(
+                    isDepotop == 1 ? IComparerImagePreview1 : IComparerImagePreview2, result.ImgUrl);
+            }
+        }
+
         private void BtnICStartParse_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists(TBICFirstTableFile.Text) || !File.Exists(TBICSecondTableFile.Text))
@@ -754,97 +872,70 @@ namespace Depotop_MC_Tools
                 return;
             }
 
-            EbayImgExtractor imgExtr = new EbayImgExtractor(TBICFirstTableFile.Text);
-            var loadedlines = imgExtr.LoadData();
             //http://www.sergechel.info/ru/content/using-sqllite-with-c-sharp-part-3-general-scenarios
-            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=imagecomparer.db; Version=3;"))
-            {
-                conn.Open();
-                // Cheking depotop
-                foreach (var item in imgExtr.DwnList.ToArray())
-                {
-                    var cmd = new SQLiteCommand(
-                        "SELECT COUNT(*) FROM anounces WHERE url='" + item[1] + "'AND depotop=1 AND img IS NOT NULL AND img != ''",
-                        conn);
-                   
-                    var count = (long)cmd.ExecuteScalar();
-
-                    if(count != 0)
-                    {
-                        imgExtr.DwnList.Remove(item);
-                        TbParserStatus.Text = item[0] + "Removed from list. This item already parsed.";
-                    }
-                }
-                conn.Close();
-            }
-
-            if(imgExtr.DwnList.Count == 0)
-            {
-                TbParserStatus.Text = "Nothing to parsing..";
-                return;
-            }
-
-            //SELECT * FROM anounces WHERE url='' depotop=1 AND img IS NOT NULL AND img != "";
-            //SELECT COUNT(*) FROM anounces WHERE url='' depotop=1 AND img IS NOT NULL AND img != "";
-
-            imgExtr.InitializeParser();
-
-            PbParsingProgress.Maximum = loadedlines;
-            PbParsingProgress.Value = 0;
-            TbParserStatus.Text = "Parsing images for anounces..";
+            string doneMessage = "Compare in DeepAI";
+            // Compare in DeepAI
             var daic = new DeepAIComparerExecutor();
-            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=imagecomparer.db; Version=3;"))
+            //daic.Compare();
+
+            EbayImgExtractor depotopImageExtractor = null;
+            EbayImgExtractor otherImageExtractor = null;
+            OpenSqlConnection(m_ICConnectionString);
+
+
+            if (CBICResetData.IsChecked == true) // Reseting data...
             {
-                conn.Open();
-                foreach (var result in imgExtr.ExtractNext())
-                {
-                    // Compare in DeepAI
-                    //daic.Compare();
-                    // Store to database
+                depotopImageExtractor = new EbayImgExtractor(TBICFirstTableFile.Text);
+                ICResetData(depotopImageExtractor);
 
-                    string sql = "INSERT INTO anounces (similarity, depotop, img, url, sku) VALUES (@similarity, @depotop, @img, @url, @sku)";
-                    SQLiteCommand cmd = new SQLiteCommand(sql, conn);
-                    cmd.Parameters.AddWithValue("@similarity", -1);
-                    cmd.Parameters.AddWithValue("@depotop", true);
-                    cmd.Parameters.AddWithValue("@img", result.ImgUrl);
-                    cmd.Parameters.AddWithValue("@url", result.Url);
-                    cmd.Parameters.AddWithValue("@sku", result.Key);
-                 
-                    
-                    cmd.ExecuteNonQuery();
+                otherImageExtractor = new EbayImgExtractor(TBICSecondTableFile.Text);
+                ICResetData(otherImageExtractor);
 
-                    // Update Views
-                    Dispatcher.Invoke(() =>
-                    {
-                        TbParserStatus.Text = "Parsing images for " + result.Key;
-                        PbParsingProgress.Value++;
-                        UpdateParserImagePrewiev(result.ImgUrl);
-                    });
-                }
-
-                conn.Close();
-                Dispatcher.Invoke(() =>
-                {
-                    UpdateParserImagePrewiev(null);
-                    TbParserStatus.Text = "Downloading done";
-                }); 
+                doneMessage = "reseting data";
             }
+            else if (CBICEarseAll.IsChecked == true) // Earsing data...
+            {
+                depotopImageExtractor = new EbayImgExtractor(TBICFirstTableFile.Text);
+                ICDeleteData(depotopImageExtractor);
+
+                otherImageExtractor = new EbayImgExtractor(TBICSecondTableFile.Text);
+                ICDeleteData(otherImageExtractor);
+
+                doneMessage = "earsing data";
+            }
+            else // Load data
+            {
+                // Load data from depotop table.
+                TbParserStatus.Text = "Load data from depotop table.";
+                depotopImageExtractor = new EbayImgExtractor(TBICFirstTableFile.Text);
+                ICParseData(depotopImageExtractor, 1);
+
+                // Load data from other table.
+                TbParserStatus.Text = "Load data from other table.";
+                otherImageExtractor = new EbayImgExtractor(TBICSecondTableFile.Text);
+                ICParseData(otherImageExtractor, 0);
+
+                doneMessage = "parsing data";
+            }
+
+            SetupProgressBar(0, string.Format("Operation {0} done..", doneMessage));
+
+            System.Diagnostics.Process.Start(@"output.csv");
+
+            CloseSqlConnection();
 
             Task.Factory.StartNew(() =>
             {
-               
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateParserImagePrewiev(null);
+                });
             });
 
 
 
 
-
-
-
-
-
             /*var url = "https://www.ebay.co.uk/itm/152940795113";
-
             EbayParser m_EbayParser = new EbayParser();
             m_EbayParser.Initialize();
             var anounce = new EbayParser.EbayAnounce(url, new List<Parser.ImageLink>());
@@ -910,6 +1001,11 @@ namespace Depotop_MC_Tools
             return "";
         }
 
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            if (m_SQLiteConnection != null)
+                m_SQLiteConnection.Close();
+        }
     }
 }
 

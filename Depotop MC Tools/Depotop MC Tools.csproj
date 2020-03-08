@@ -160,6 +160,9 @@
   <ItemGroup>
     <Resource Include="dictionary.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="C-To-Go-300x300.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
