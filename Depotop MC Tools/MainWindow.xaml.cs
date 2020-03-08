@@ -21,6 +21,7 @@ using static Depotop_MC_Tools.AmazonParser;
 using System.Net;
 using System.Diagnostics;
 using System.Xml.Linq;
+using System.Data.SQLite;
 
 namespace Depotop_MC_Tools
 {
@@ -91,6 +92,7 @@ namespace Depotop_MC_Tools
             Initialize();
             InitializeImageExtract();
             InitializeImageParser();
+            InitializeImageComparer();
         }
 
         #region Title Tratement
@@ -463,6 +465,7 @@ namespace Depotop_MC_Tools
         }
 
         #endregion
+
         #region Image Parser
         public string ParserOutDir { get { return TbParserOutDir.Text; } set { TbParserOutDir.Text = value; } }
 
@@ -494,7 +497,7 @@ namespace Depotop_MC_Tools
             TbParserStatus.Text = "Parsing started";
             var input = ParseInputData();
             Parser parser = GetSelectedParser();
-            if(parser == null)
+            if (parser == null)
             {
                 System.Windows.MessageBox.Show("Ошибка при выборе парсера!");
                 return;
@@ -508,7 +511,7 @@ namespace Depotop_MC_Tools
             {
                 var sku = line[0];
                 var oe = line[1];
-                
+
                 parser.Search(sku, oe);
 
                 TbParserStatus.Text = "Parsing images links for " + sku;
@@ -555,14 +558,14 @@ namespace Depotop_MC_Tools
             Parser p = null;
             var selectedParser = CbParserType.SelectedIndex;
             // Amazon
-            if(selectedParser == 0)
+            if (selectedParser == 0)
             {
                 p = new AmazonParser(null);
             }
             else // Ebay
             if (selectedParser == 1)
             {
-
+                p = new EbayParser(null);
             }
             else // Febest
             if (selectedParser == 2)
@@ -709,6 +712,174 @@ namespace Depotop_MC_Tools
 
         #endregion
 
+        #region Image Comparer Tab
+        private void InitializeImageComparer()
+        {
+            if (!File.Exists(@"imagecomparer.db"))
+            {
+                SQLiteConnection.CreateFile(@"imagecomparer.db");
+            }
+
+            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=imagecomparer.db; Version=3;"))
+            {
+                string commandText = "CREATE TABLE  IF NOT EXISTS anounces (" +
+                                        "id INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                                        "sku VARCHAR(20), " +
+                                        "url VARCHAR(50), " +
+                                        "img VARCHAR(100), " +
+                                        "depotop BOOLEAN(1), " +
+                                        "similarity INTEGER(3))";
+                SQLiteCommand Command = new SQLiteCommand(commandText, conn);
+                conn.Open();
+                Command.ExecuteNonQuery();
+                conn.Close();
+            }
+        }
+
+        private void BtnICCSelectFirstTable_Click(object sender, RoutedEventArgs e)
+        {
+            TBICFirstTableFile.Text = OpenCsvFileDialog();
+        }
+
+        private void BtnICCSelectSecondTable_Click(object sender, RoutedEventArgs e)
+        {
+            TBICSecondTableFile.Text = OpenCsvFileDialog();
+        }
+
+        private void BtnICStartParse_Click(object sender, RoutedEventArgs e)
+        {
+            if (!File.Exists(TBICFirstTableFile.Text) || !File.Exists(TBICSecondTableFile.Text))
+            {
+                System.Windows.MessageBox.Show("Укажите csv файл сначала!");
+                return;
+            }
+
+            EbayImgExtractor imgExtr = new EbayImgExtractor(TBICFirstTableFile.Text);
+            var loadedlines = imgExtr.LoadData();
+            //http://www.sergechel.info/ru/content/using-sqllite-with-c-sharp-part-3-general-scenarios
+            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=imagecomparer.db; Version=3;"))
+            {
+                conn.Open();
+                // Cheking depotop
+                foreach (var item in imgExtr.DwnList.ToArray())
+                {
+                    var cmd = new SQLiteCommand(
+                        "SELECT COUNT(*) FROM anounces WHERE url='" + item[1] + "'AND depotop=1 AND img IS NOT NULL AND img != ''",
+                        conn);
+                   
+                    var count = (long)cmd.ExecuteScalar();
+
+                    if(count != 0)
+                    {
+                        imgExtr.DwnList.Remove(item);
+                        TbParserStatus.Text = item[0] + "Removed from list. This item already parsed.";
+                    }
+                }
+                conn.Close();
+            }
+
+            if(imgExtr.DwnList.Count == 0)
+            {
+                TbParserStatus.Text = "Nothing to parsing..";
+                return;
+            }
+
+            //SELECT * FROM anounces WHERE url='' depotop=1 AND img IS NOT NULL AND img != "";
+            //SELECT COUNT(*) FROM anounces WHERE url='' depotop=1 AND img IS NOT NULL AND img != "";
+
+            imgExtr.InitializeParser();
+
+            PbParsingProgress.Maximum = loadedlines;
+            PbParsingProgress.Value = 0;
+            TbParserStatus.Text = "Parsing images for anounces..";
+            var daic = new DeepAIComparerExecutor();
+            using (SQLiteConnection conn = new SQLiteConnection(@"Data Source=imagecomparer.db; Version=3;"))
+            {
+                conn.Open();
+                foreach (var result in imgExtr.ExtractNext())
+                {
+                    // Compare in DeepAI
+                    //daic.Compare();
+                    // Store to database
+
+                    string sql = "INSERT INTO anounces (similarity, depotop, img, url, sku) VALUES (@similarity, @depotop, @img, @url, @sku)";
+                    SQLiteCommand cmd = new SQLiteCommand(sql, conn);
+                    cmd.Parameters.AddWithValue("@similarity", -1);
+                    cmd.Parameters.AddWithValue("@depotop", true);
+                    cmd.Parameters.AddWithValue("@img", result.ImgUrl);
+                    cmd.Parameters.AddWithValue("@url", result.Url);
+                    cmd.Parameters.AddWithValue("@sku", result.Key);
+                 
+                    
+                    cmd.ExecuteNonQuery();
+
+                    // Update Views
+                    Dispatcher.Invoke(() =>
+                    {
+                        TbParserStatus.Text = "Parsing images for " + result.Key;
+                        PbParsingProgress.Value++;
+                        UpdateParserImagePrewiev(result.ImgUrl);
+                    });
+                }
+
+                conn.Close();
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateParserImagePrewiev(null);
+                    TbParserStatus.Text = "Downloading done";
+                }); 
+            }
+
+            Task.Factory.StartNew(() =>
+            {
+               
+            });
+
+
+
+
+
+
+
+
+
+            /*var url = "https://www.ebay.co.uk/itm/152940795113";
+
+            EbayParser m_EbayParser = new EbayParser();
+            m_EbayParser.Initialize();
+            var anounce = new EbayParser.EbayAnounce(url, new List<Parser.ImageLink>());
+            var anounces = new List<Anounce>
+            {
+                anounce
+            };
+
+            m_EbayParser.SearchResults.Add(url, anounces);
+
+            foreach (var result in m_EbayParser.Parse())
+            {
+                PbParsingProgress.Value = result.Index;
+                UpdateParserImagePrewiev(result.ImgUrl);
+            }
+
+            var exp = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath);
+
+            try
+            {
+                System.IO.File.Delete("output.csv");
+                m_EbayParser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
+            }
+            catch (Exception ex)
+            {
+                var rfileName = "output" + System.IO.Path.GetRandomFileName() + ".csv";
+                m_EbayParser.DumpResultToCsv(System.IO.Path.Combine(exp, rfileName));
+                System.Windows.MessageBox.Show(ex.Message);
+                System.Windows.MessageBox.Show("File saved as " + rfileName);
+            }*/
+        }
+
+
+        #endregion
+
         private static Random random = new Random();
         public static string RandomString(int length)
         {
@@ -716,6 +887,29 @@ namespace Depotop_MC_Tools
             return new string(Enumerable.Repeat(chars, length)
               .Select(s => s[random.Next(s.Length)]).ToArray());
         }
+
+        private string OpenCsvFileDialog()
+        {
+            var fileContent = string.Empty;
+            var filePath = string.Empty;
+
+            using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            {
+                //openFileDialog.InitialDirectory = "c:\\";
+                openFileDialog.Filter = "csv files (*.csv)|*.csv|All files (*.*)|*.*";
+                openFileDialog.FilterIndex = 1;
+                openFileDialog.RestoreDirectory = true;
+
+                if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    //Get the path of specified file
+                    return openFileDialog.FileName;
+                }
+            }
+
+            return "";
+        }
+
     }
 }
 

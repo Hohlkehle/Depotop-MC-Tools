@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DeepAI; // Add this line to the top of your file
 using System.IO;
 using NDesk.Options;
+using System.Text.RegularExpressions;
 
 namespace DeepAIComparer
 {
@@ -21,7 +22,7 @@ namespace DeepAIComparer
         static bool useLocalFiles = true;
         static void Main(string[] args)
         {
-            args = new string[] { "-k=983cc50b-cd6f-48ad-85c9-b3aae4f7f26f ", "-i=SM-0016.www.ebay.co.uk.123752402471.jpg", "-i1=SM-0016_.www.ebay.co.uk.183994826038.jpg"};
+            //args = new string[] { "-k=983cc50b-cd6f-48ad-85c9-b3aae4f7f26f ", "-is=SM-0003.www.ebay.co.uk.311858508219.jpg", "-is=SM-0016.www.ebay.co.uk.123752402471.jpg", "-is=SM-0016_.www.ebay.co.uk.183994826038.jpg"};
             bool show_help = false;
             string apiKey = "";
 
@@ -32,12 +33,7 @@ namespace DeepAIComparer
             var p = new OptionSet() {
                 { "k|key=", "DeepAI api key", v => apiKey = v },
                 { "r", "Use remote files with url", v => useLocalFiles = v == null },
-                { "i|img=", "First image to compare", (string v) => images.Add(v) },
-                { "i1|img1=", "1 image to compare", (string v) => images.Add(v) },
-                { "i2|img2=", "2 image to compare", (string v) => images.Add(v) },
-                { "i3|img3=", "3 image to compare", (string v) => images.Add(v) },
-                { "i4|img4=", "4 image to compare", (string v) => images.Add(v) },
-                { "i5|img5=", "5 image to compare", (string v) => images.Add(v) },
+                { "is|imgsource=", "Images to compare", (string v) => images.Add(v) },
                 { "v", "increase debug message verbosity", v => { if (v != null) ++verbosity; } },
                 { "h|help",  "show this message and exit", v => show_help = v != null }
             };
@@ -97,27 +93,21 @@ namespace DeepAIComparer
                 results.Add(resp);
             }
 
+            var distances = new List<int>();
             foreach (var result in results)
             {
-                var distance = result.output.GetType().GetProperty("distance");
-                Console.WriteLine(distance);
+                Newtonsoft.Json.Linq.JObject distance = (Newtonsoft.Json.Linq.JObject)result.output;
+                var value = JObjectToInt(distance);
+                distances.Add(value);
             }
-
-            Console.ReadKey();
-
-            Debug("Using new message: {0}", "");
-
-
-
-
-
+            var outputStr = string.Join(";", distances.ToArray());
+            Console.Write(outputStr);
+            //Console.ReadKey(); 
+            
 
             /*
             // Ensure your DeepAI.Client NuGet package is up to date: https://www.nuget.org/packages/DeepAI.Client
-            // Example posting a image URL:
-
             DeepAI_API api = new DeepAI_API(apiKey: "983cc50b-cd6f-48ad-85c9-b3aae4f7f26f");
-
             StandardApiResponse resp = api.callStandardApi("image-similarity", new
             {
                 image1 = "YOUR_IMAGE_URL",
@@ -125,10 +115,27 @@ namespace DeepAIComparer
             });
             Console.Write(api.objectAsJsonString(resp));
             */
+        }
 
-            // Example posting a local image file:
+        static int JObjectToInt(Newtonsoft.Json.Linq.JObject jObject)
+        { 
+            var result = 100;
+            var pattern = @"(\d+)";
+            var content = jObject.ToString();
+               
+            Regex rgx = new Regex(pattern, RegexOptions.IgnoreCase);
+            Match match = rgx.Match(content);
 
+            if (match.Success)
+            {
+                result = int.Parse(match.Value.Trim());
+            }
+            else
+            {
+                // error
+            }
 
+            return result;
         }
 
         static DeepAiOptions BuildInputOptions(string img, string img1)

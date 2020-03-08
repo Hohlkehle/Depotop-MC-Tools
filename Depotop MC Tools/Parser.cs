@@ -94,7 +94,7 @@ namespace Depotop_MC_Tools
         }
         public HtmlWeb HtmlWebInstance { get => m_HtmlWeb; set => m_HtmlWeb = value; }
 
-        public IEnumerable<Anounce.LoadAnounceDataResult> Parse()
+        public virtual IEnumerable<Anounce.LoadAnounceDataResult> Parse()
         {
             int progress = 1;
             foreach (KeyValuePair<string, List<Anounce>> kvp in m_searchResults)

@@ -55,3 +55,40 @@ D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.xml
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.xml
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.DirectShow.xml
 D:\Projects\Win\Depotop MC Tools\Depotop MC Tools\bin\Debug\Newtonsoft.Json.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.DirectShow.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Newtonsoft.Json.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.Themes.Aero.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.Themes.Metro.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.AvalonDock.Themes.VS2010.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Xceed.Wpf.Toolkit.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\AForge.Video.DirectShow.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.pdb
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\HtmlAgilityPack.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\Newtonsoft.Json.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\cs-CZ\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\de\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\es\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\fr\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\hu\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\it\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\pt-BR\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\ro\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\ru\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\sv\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\zh-Hans\Xceed.Wpf.AvalonDock.resources.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\obj\Debug\Depotop MC Tools.csproj.CopyComplete
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.SqlServer.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.EF6.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.Linq.dll
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\EntityFramework.SqlServer.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.xml
+U:\Desktop\Visual Studio Project\Office\Depotop MC Tools\Depotop MC Tools\bin\Debug\System.Data.SQLite.dll.config

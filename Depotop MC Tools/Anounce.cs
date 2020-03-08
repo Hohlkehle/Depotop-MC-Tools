@@ -25,8 +25,10 @@ namespace Depotop_MC_Tools
         }
 
         private List<ImageLink> m_ImageLinks;
-
+        protected string m_Url;
+        public string Url { get => m_Url; set => m_Url = value; }
         public virtual string PrewievUrl { get { return ""; } }
+        public virtual string HomeUrl { set { } get { return ""; } }
 
         public List<ImageLink> ImageLinks { get => m_ImageLinks; set => m_ImageLinks = value; }
 

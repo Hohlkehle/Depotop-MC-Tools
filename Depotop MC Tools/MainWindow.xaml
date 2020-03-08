@@ -8,8 +8,16 @@
         mc:Ignorable="d"
         Title="Depotop Tools" Height="451.027" Width="652.118">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="13*"/>
+            <RowDefinition Height="2*"/>
+        </Grid.RowDefinitions>
 
-        <TabControl Margin="0,0,0,54">
+        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" Grid.RowSpan="2" >
+            <ContentControl Margin="0,0,0,54" />
+        </xctk:BusyIndicator>
+
+        <TabControl Margin="0,0,0,54" Grid.RowSpan="2">
             <TabItem Header="Titles">
                 <Grid Background="#FFE5E5E5">
                     <Grid.ColumnDefinitions>
@@ -108,11 +116,11 @@
                                  TextWrapping="Wrap" AcceptsReturn="True"
                                  HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                                  Text="" VerticalAlignment="Top"/>
-                                <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,176,0,46">
-                                    <Image x:Name="IParserImagePreview" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
+                            <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,176,0,46">
+                                <Image x:Name="IParserImagePreview" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
 
-                                </Border>
-                         </Grid>
+                            </Border>
+                        </Grid>
                     </GroupBox>
                     <GroupBox Grid.Column="1" Header="Спарсить" HorizontalAlignment="Left" Height="100" Margin="10,0,0,187" VerticalAlignment="Bottom" Width="427" Grid.RowSpan="2">
                         <Grid Margin="0,0,0,23">
@@ -144,17 +152,67 @@
 
                 </Grid>
             </TabItem>
-        </TabControl>
-        <ProgressBar x:Name="PbParsingProgress" HorizontalAlignment="Left" Height="14" Margin="10,371,0,0" VerticalAlignment="Top" Width="624"/>
+            <TabItem Header="Image Comparer">
+                <Grid Background="#FFE5E5E5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="149*"/>
+                        <RowDefinition Height="189*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <GroupBox Header="Спарсить ссылки на изображения" Grid.Row="0" Grid.Column="0" Margin="0,0,0,0">
+                        <StackPanel Orientation="Vertical" Grid.Row="0">
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock TextWrapping="Wrap"><Run Text="Таблица с изображениями depotop"/></TextBlock>
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                    <TextBox x:Name="TBICFirstTableFile" Height="23" TextWrapping="NoWrap" Text="" Width="238"/>
+                                    <Button x:Name="BtnICCSelectFirstTable" Content="Выбрать" Margin="10,0,10,0" Click="BtnICCSelectFirstTable_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock TextWrapping="Wrap" Text="Таблица с изображениями для сравнения"/>
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                    <TextBox x:Name="TBICSecondTableFile" Height="23" TextWrapping="NoWrap" Text="" Width="238"/>
+                                    <Button x:Name="BtnICCSelectSecondTable" Content="Выбрать" Margin="10,0,10,0" RenderTransformOrigin="0.5,0.696" Click="BtnICCSelectSecondTable_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Orientation="Vertical">
 
-        <StatusBar HorizontalAlignment="Left" Height="35" Margin="10,385,0,0" VerticalAlignment="Top" Width="624">
-            <StatusBarItem>
-                <TextBlock Name="TbParserStatus" Text="" />
-            </StatusBarItem>
-        </StatusBar>
-        <xctk:BusyIndicator IsBusy="False" x:Name="_busyIndicator" >
-            <ContentControl Margin="0,0,0,54" />
-        </xctk:BusyIndicator>
+                                <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                    <Button x:Name="BtnICDownload" Content="Cпарсить" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICStartParse_Click"/>
+                                    <Button x:Name="BtnICCompare" Content="Сравнить" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                    <Button x:Name="BtnICGetOutput" Content="Выгрузить" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </GroupBox>
+
+
+                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Grid.Row="1">
+                        <Image x:Name="IComparerImagePreview1" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
+
+                    </Border>
+                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Grid.Column="1" Grid.Row="1">
+                        <Image x:Name="IComparerImagePreview2" HorizontalAlignment="Left" Height="126" Margin="0,176,0,0" VerticalAlignment="Top" Width="159"/>
+
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
+        <StackPanel Grid.Row="1" Height="56">
+
+            <ProgressBar x:Name="PbParsingProgress" Margin="2,2,2,0" Height="15"/>
+
+            <StatusBar Height="35" Margin="2,2,2,0" >
+                <StatusBarItem Height="35" VerticalAlignment="Top">
+                    <TextBlock x:Name="TbParserStatus" Text="" />
+                </StatusBarItem>
+            </StatusBar>
+        </StackPanel>
+
+
 
     </Grid>
 </Window>
