@@ -20,11 +20,11 @@ namespace Depotop_MC_Tools
 
         public string Output { get => output; set => output = value; }
 
-        public int Compare(string img1, string img2)
+        public int Compare(string img1, string img2, bool localFiles = false)
         {
             int result = -1;
             Output = "";
-            ExecuteFileDownloader(img1, img2);
+            ExecuteFileDownloader(img1, img2, localFiles);
 
             if (!String.IsNullOrEmpty(Output) && int.TryParse(Output, out result))
                 return result;
@@ -32,12 +32,12 @@ namespace Depotop_MC_Tools
             return result;
         }
 
-        public void ExecuteFileDownloader(string img1, string img2)
+        public void ExecuteFileDownloader(string img1, string img2, bool localFiles)
         {
             Process p = new Process();
             ProcessStartInfo startInfo = new ProcessStartInfo();
             startInfo.FileName = app;
-            startInfo.Arguments = string.Format(@"""-k={0}"" ""-is={1}""  ""-is={2}""", key, img1, img2);
+            startInfo.Arguments = string.Format(@"""-k={0}"" ""-is={1}""  ""-is={2}"" {3}", key, img1, img2, localFiles ? "" : "-r");
             startInfo.RedirectStandardOutput = true;
             startInfo.UseShellExecute = false;
             //startInfo.RedirectStandardInput

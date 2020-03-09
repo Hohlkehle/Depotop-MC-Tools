@@ -106,10 +106,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ICItem.cs" />
     <Compile Include="EbayImgExtractor.cs" />
     <Compile Include="EbayParser.cs" />
     <Compile Include="DeepAIComparerExecutor.cs" />
     <Compile Include="FebestParser.cs" />
+    <Compile Include="ManualImageComparer.cs" />
     <Compile Include="WaitForFileReady.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>

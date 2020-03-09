@@ -715,6 +715,7 @@ namespace Depotop_MC_Tools
         #region Image Comparer Tab
         private SQLiteConnection m_SQLiteConnection = null;
         private string m_ICConnectionString = @"Data Source=imagecomparer.db; Version=3;";
+        private ManualImageComparer m_ManualImageComparer;
         private void OpenSqlConnection(string connectionString)
         {
             if (m_SQLiteConnection == null || m_SQLiteConnection.State != System.Data.ConnectionState.Open)
@@ -775,6 +776,16 @@ namespace Depotop_MC_Tools
                 TbParserStatus.Text = statusText;
         }
 
+        public void ICUpdateFirstImagePreview(string uri)
+        {
+            ICUpdateImagePreview(IComparerImagePreview1, uri);
+        }
+
+        public void ICUpdateSeconImagePreview(string uri)
+        {
+            ICUpdateImagePreview(IComparerImagePreview2, uri);
+        }
+
         private void ICUpdateImagePreview(Image image, string uri)
         {
             if (uri == null)
@@ -823,6 +834,14 @@ namespace Depotop_MC_Tools
             }
         }
 
+        private void ICUpdateSimilarity(ICItem icItem, int similarity)
+        {
+            var cmd = new SQLiteCommand("UPDATE anounces SET similarity=@similarity WHERE id=@id", m_SQLiteConnection);
+            cmd.Parameters.AddWithValue("@similarity", similarity);
+            cmd.Parameters.AddWithValue("@id", icItem.Id);
+            cmd.ExecuteNonQuery();
+        }
+
         private void ICDeleteData(EbayImgExtractor ie)
         {
             var loadedlines = ie.LoadData();
@@ -864,6 +883,36 @@ namespace Depotop_MC_Tools
             }
         }
 
+        private List<ICItem> ICLoadItemsByDepotopList(List<string[]> data)
+        {
+            string sql = "SELECT id, sku, url, img, depotop, similarity FROM anounces WHERE sku=@sku";
+            var cmd = new SQLiteCommand(sql, m_SQLiteConnection);
+            var iCItems = new List<ICItem>();
+            foreach (var item in data)
+            {
+                cmd.Parameters.AddWithValue("@sku", item[0]);
+
+                try
+                {
+                    SQLiteDataReader r = cmd.ExecuteReader();
+
+                    while (r.Read())
+                    {
+                        var iCItem = new ICItem(r);
+                        iCItems.Add(iCItem);
+                    }
+                    r.Close();
+                }
+                catch (SQLiteException ex)
+                {
+                    TbParserStatus.Text = ex.Message;
+                }
+
+                ProgressUp();
+            }
+            return iCItems;
+        }
+
         private void BtnICStartParse_Click(object sender, RoutedEventArgs e)
         {
             if (!File.Exists(TBICFirstTableFile.Text) || !File.Exists(TBICSecondTableFile.Text))
@@ -903,7 +952,7 @@ namespace Depotop_MC_Tools
 
                 doneMessage = "earsing data";
             }
-            else // Load data
+            else if (CBICParseData.IsChecked == true)// Load data
             {
                 // Load data from depotop table.
                 TbParserStatus.Text = "Load data from depotop table.";
@@ -918,9 +967,88 @@ namespace Depotop_MC_Tools
                 doneMessage = "parsing data";
             }
 
+            if (CBICDeepAICompare.IsChecked == true)// DeepAi compare
+            {
+                depotopImageExtractor = new EbayImgExtractor(TBICFirstTableFile.Text);
+                var loadedlines = depotopImageExtractor.LoadData();
+                SetupProgressBar(loadedlines, "Loading data...");
+                var alltems = ICLoadItemsByDepotopList(depotopImageExtractor.DwnList);
+
+                var depotopItems = from i in alltems where i.Depotop select i;
+                SetupProgressBar(depotopItems.Count(), "DeepAi comparing in process...");
+                var deepAIComparerExecutor = new DeepAIComparerExecutor();
+                foreach (var dItem in depotopItems)
+                {
+                    var otherItems = (from i in alltems where !i.Depotop && i.Sku == dItem.Sku && i.Similarity == -1 select i);
+                    foreach (var oItem in otherItems)
+                    {
+                        var deepIndex = deepAIComparerExecutor.Compare(dItem.Img, oItem.Img);
+
+                        ICUpdateSimilarity(oItem, deepIndex);
+
+                        TBICDeepAiIndex.Text = deepIndex.ToString();
+                    }
+                    ProgressUp();
+                }
+
+                // Export to csv
+                SetupProgressBar(alltems.Count(), "DeepAi exporting in process...");
+                var csv = new StringBuilder();
+                csv.AppendLine("Url;Model;Similarity");
+                foreach (var dItem in depotopItems)
+                {
+                    var otherItems = (from i in alltems where !i.Depotop && i.Sku == dItem.Sku select i);
+                    foreach (var oItem in otherItems)
+                    {
+                        var newLine = string.Format("{0};{1};{2}", oItem.Url, oItem.Sku, oItem.Similarity);
+                        csv.AppendLine(newLine);
+
+                        ProgressUp();
+                    }
+                }
+
+                var path = "icoutput.csv";
+                File.WriteAllText(path, csv.ToString());
+                System.Diagnostics.Process.Start(path);
+
+                TBICDeepAiIndex.Text = "-1";
+                doneMessage = "DeepAi compare";
+            }
+
             SetupProgressBar(0, string.Format("Operation {0} done..", doneMessage));
 
-            System.Diagnostics.Process.Start(@"output.csv");
+            if (CBICManualCompare.IsChecked == true)// Manual compare
+            {
+                depotopImageExtractor = new EbayImgExtractor(TBICFirstTableFile.Text);
+                var loadedlines = depotopImageExtractor.LoadData();
+                SetupProgressBar(loadedlines, "Loading data...");
+                var alltems = ICLoadItemsByDepotopList(depotopImageExtractor.DwnList);
+                m_ManualImageComparer = new ManualImageComparer();
+                m_ManualImageComparer.AllItems = alltems;
+                m_ManualImageComparer.Initialize(this);
+                m_ManualImageComparer.Next();
+                SetupProgressBar(m_ManualImageComparer.DepotopItems.Count(), "Manual browsing in process...");
+                ProgressUp();
+                TBICDeepAiIndex.Text = m_ManualImageComparer.CurrentOtherItem.Similarity.ToString();
+                TbICManualCModelName.Text = m_ManualImageComparer.CurrentDepotopItem.Sku;
+
+                /*foreach (var dItem in m_ManualImageComparer.DepotopItems)
+                {
+                    ICUpdateImagePreview(IComparerImagePreview1, dItem.Img);
+                    var otherItems = (from i in alltems where !i.Depotop && i.Sku == dItem.Sku select i);
+                    foreach (var oItem in otherItems)
+                    {
+                        ICUpdateImagePreview(IComparerImagePreview2, oItem.Img);
+                        TBICDeepAiIndex.Text = oItem.Similarity.ToString();
+                        TbICManualCModelName.Text = dItem.Sku;
+                        ProgressUp();
+                        break;
+                    }
+                }*/
+                doneMessage = "Manual compare";
+            }
+
+
 
             CloseSqlConnection();
 
@@ -932,43 +1060,69 @@ namespace Depotop_MC_Tools
                 });
             });
 
-
-
-
-            /*var url = "https://www.ebay.co.uk/itm/152940795113";
-            EbayParser m_EbayParser = new EbayParser();
-            m_EbayParser.Initialize();
-            var anounce = new EbayParser.EbayAnounce(url, new List<Parser.ImageLink>());
-            var anounces = new List<Anounce>
-            {
-                anounce
-            };
-
-            m_EbayParser.SearchResults.Add(url, anounces);
-
-            foreach (var result in m_EbayParser.Parse())
-            {
-                PbParsingProgress.Value = result.Index;
-                UpdateParserImagePrewiev(result.ImgUrl);
-            }
-
-            var exp = System.IO.Path.GetDirectoryName(System.Windows.Forms.Application.ExecutablePath);
-
-            try
-            {
-                System.IO.File.Delete("output.csv");
-                m_EbayParser.DumpResultToCsv(System.IO.Path.Combine(exp, "output.csv"));
-            }
-            catch (Exception ex)
-            {
-                var rfileName = "output" + System.IO.Path.GetRandomFileName() + ".csv";
-                m_EbayParser.DumpResultToCsv(System.IO.Path.Combine(exp, rfileName));
-                System.Windows.MessageBox.Show(ex.Message);
-                System.Windows.MessageBox.Show("File saved as " + rfileName);
-            }*/
         }
 
+        private void ICNextImageInManual(int result)
+        {
+            if (!m_ManualImageComparer.IsInitialized)
+            {
+                SetupProgressBar(0, string.Format("Manual comparsion is not iniialized!", ""));
+                return;
+            }
 
+            m_ManualImageComparer.CurrentOtherItem.Similarity = result;
+            ICUpdateSimilarity(m_ManualImageComparer.CurrentOtherItem, result);
+            var finished = m_ManualImageComparer.Next();
+
+            if (finished)
+            {
+                var dlgres = System.Windows.MessageBox.Show("Would you like to export result to csv file&", "Depotop MC Tools", MessageBoxButton.YesNo);
+                switch (dlgres)
+                {
+                    case MessageBoxResult.Yes:
+                        m_ManualImageComparer.ExportToCsv();
+                        break;
+                    case MessageBoxResult.No:
+
+                        break;
+                }
+            }
+            else
+            {
+                TBICDeepAiIndex.Text = m_ManualImageComparer.CurrentOtherItem.Similarity.ToString();
+                TbICManualCModelName.Text = m_ManualImageComparer.CurrentDepotopItem.Sku;
+                ProgressUp();
+            }
+        }
+
+        private void BtnICImageIsIdentical_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSqlConnection(m_ICConnectionString);
+            var result = 1;
+            ICNextImageInManual(result);
+            TbParserStatus.Text = "Images is identical";
+            CloseSqlConnection();
+        }
+
+        private void BtnICImageIsDifferent_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSqlConnection(m_ICConnectionString);
+            var result = 100;
+            ICNextImageInManual(result);
+            TbParserStatus.Text = "Images is different";
+            CloseSqlConnection();
+        }
+
+        private void BtnICExportManualComparsion_Click(object sender, RoutedEventArgs e)
+        {
+            if (!m_ManualImageComparer.IsInitialized)
+            {
+                SetupProgressBar(0, string.Format("Manual comparsion is not iniialized!", ""));
+                return;
+            }
+
+            m_ManualImageComparer.ExportToCsv();
+        }
         #endregion
 
         private static Random random = new Random();
@@ -1006,6 +1160,8 @@ namespace Depotop_MC_Tools
             if (m_SQLiteConnection != null)
                 m_SQLiteConnection.Close();
         }
+
+       
     }
 }
 

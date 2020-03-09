@@ -217,24 +217,32 @@
 
                             <StackPanel Orientation="Vertical">
                                 <StackPanel Orientation="Horizontal" Margin="5,5,0,0" >
-                                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Height="200" Width="220">
+                                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="0,2,0,10" Height="165" Width="220" VerticalAlignment="Top">
                                         <Image x:Name="IComparerImagePreview1"   Margin="0,0,0,0"  />
 
                                     </Border>
-                                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="10,2,0,10" Height="200" Width="220">
+                                    <Border Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="1" Margin="10,2,0,10" Height="165" Width="220" VerticalAlignment="Top">
                                         <Image x:Name="IComparerImagePreview2"   Margin="0,0,0,0"  />
 
                                     </Border>
                                     <StackPanel Orientation="Vertical">
+                                        <TextBlock x:Name="TbICManualCModelName" TextWrapping="Wrap" Text="Model"  Margin="5,0,0,5" FontWeight="Bold"/>
                                         <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
                                             <CheckBox  Content="Пропускать похожие" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                            <Button  Content="Одинаковые" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                            <Button x:Name="BtnICImageIsIdentical" Content="Одинаковые" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICImageIsIdentical_Click"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                            <Button  Content="Разные" Margin="0,5,10,5" Padding="5,2,5,2"/>
+                                            <Button  x:Name="BtnICImageIsDifferent" Content="Разные" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICImageIsDifferent_Click"/>
+                                            <Button  x:Name="BtnICExportManualComparsion" Content="Export" Margin="20,5,10,5" Padding="5,2,5,2" Click="BtnICExportManualComparsion_Click" />
                                         </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
+                                            <TextBlock TextWrapping="Wrap" Text="DeepAI Index: "  Margin="5,7,0,0"/>
+                                            <TextBox x:Name="TBICDeepAiIndex" Height="23" TextWrapping="Wrap" Text="-1" Width="60" Margin="5,5,0,0"/>
+                                        </StackPanel>
+                                       
+
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
