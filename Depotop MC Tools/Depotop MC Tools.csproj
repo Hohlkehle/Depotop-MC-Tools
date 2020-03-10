@@ -111,6 +111,7 @@
     <Compile Include="EbayParser.cs" />
     <Compile Include="DeepAIComparerExecutor.cs" />
     <Compile Include="FebestParser.cs" />
+    <Compile Include="ManualEbayImgExtractor.cs" />
     <Compile Include="ManualImageComparer.cs" />
     <Compile Include="WaitForFileReady.cs" />
     <Page Include="MainWindow.xaml">

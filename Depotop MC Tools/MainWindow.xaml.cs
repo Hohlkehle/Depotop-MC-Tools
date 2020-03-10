@@ -806,6 +806,7 @@ namespace Depotop_MC_Tools
 
         private int ICStoreItemToDatabase(EbayParser.LoadEbayAnounceDataResult record, bool isDepotop, int similarity)
         {
+            OpenSqlConnection(m_ICConnectionString);
             string sql = "INSERT INTO anounces (similarity, depotop, img, url, sku) VALUES (@similarity, @depotop, @img, @url, @sku)";
             SQLiteCommand cmd = new SQLiteCommand(sql, m_SQLiteConnection);
             cmd.Parameters.AddWithValue("@similarity", similarity);
@@ -1017,6 +1018,24 @@ namespace Depotop_MC_Tools
 
             SetupProgressBar(0, string.Format("Operation {0} done..", doneMessage));
 
+
+
+            if (CBICManualCompare.IsChecked == true)// Manual compare
+            {
+                ICManualCompare();
+            }
+
+            CloseSqlConnection();
+
+            Task.Factory.StartNew(() =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateParserImagePrewiev(null);
+                });
+            });
+            return;
+
             if (CBICManualCompare.IsChecked == true)// Manual compare
             {
                 depotopImageExtractor = new EbayImgExtractor(TBICFirstTableFile.Text);
@@ -1050,15 +1069,175 @@ namespace Depotop_MC_Tools
 
 
 
+
+
+        }
+        ManualEbayImgExtractor m_ManualEbayImgExtractor;
+        int indexF = 0;
+        int indexS = 0;
+        List<ICItem> mICItems;
+        private void ICCheckDownloadUpdateItem(ICItem dItem, int distance)
+        {
+            if (String.IsNullOrEmpty(dItem.Img))
+            {
+                EbayImgExtractor extractor;
+                // create parser for depotop
+                // parse img
+                extractor = new EbayImgExtractor("");
+                extractor.DwnList.Add(new string[] { dItem.Sku, dItem.Url });
+                extractor.InitializeParser();
+                foreach (var result in extractor.ExtractNext())
+                {
+                    result.Key = dItem.Sku;
+                    ICStoreItemToDatabase(result, true, distance);
+                    dItem.Img = result.ImgUrl;
+                }
+            }
+            else
+            {
+                ICUpdateSimilarity(dItem, distance);
+            }
+        }
+
+        private void ICIncrementStep(bool isFinished)
+        {
+            indexS++;
+            if (indexS >= mICItems.Count - 1 || isFinished)
+            {
+
+                indexF = (indexF + 1) % m_ManualEbayImgExtractor.DepotopRecords.Count;
+                indexS = 1;
+
+                mICItems = m_ManualEbayImgExtractor.SelectAllByIndex(indexF);
+                m_ManualEbayImgExtractor.m_SQLiteConnection = m_SQLiteConnection;
+                m_ManualEbayImgExtractor.ActualizeWhithDB(ref mICItems);
+
+                
+
+            }
+        }
+
+        private bool ICIncrement(int distance)
+        {
+            OpenSqlConnection(m_ICConnectionString);
+            var isFinished = false;
+
+            if (distance == 1)
+            {
+                ICUpdateSimilarity(mICItems[indexS], distance);
+                isFinished = true;
+                ICIncrementStep(true);
+            }
+
+           
+                var dItem = mICItems[0];
+                var oItem = mICItems[indexS];
+                // if not exists 
+                ICCheckDownloadUpdateItem(dItem, distance);
+                TbICManualCModelName.Text = dItem.Sku;
+                if (indexF == 0)
+                    ICUpdateImagePreview(IComparerImagePreview1, dItem.Img);
+
+
+                ICCheckDownloadUpdateItem(oItem, distance);
+                ICUpdateImagePreview(IComparerImagePreview2, oItem.Img);
+                TBICDeepAiIndex.Text = oItem.Similarity.ToString();
+                /*/// create parser for oter
+                // parse img
+                extractor = new EbayImgExtractor("");
+
+                for (var i = 1; i < mICItems.Count; i++)
+                {
+                    var oItem = mICItems[i];
+
+                    if (String.IsNullOrEmpty(oItem.Img))
+                    {
+                        extractor.DwnList.Add(new string[] { oItem.Sku, oItem.Url });
+                    }
+                }
+                extractor.InitializeParser();
+                foreach (var result in extractor.ExtractNext())
+                {
+                    for (var i = 1; i < mICItems.Count; i++)
+                    {
+                        var oItem = mICItems[i];
+                        if (oItem.Url == result.Url)
+                        {
+                            ICStoreItemToDatabase(result, false, -1);
+                            oItem.Img = result.ImgUrl;
+                        }
+                    }
+                    foreach (var i in mICItems.Where(i => i.Url == result.Url)) { }
+                }
+
+                TBICDeepAiIndex.Text = mICItems[indexS].Similarity.ToString();
+                //TbICManualCModelName.Text = mICItems[indexS].Sku;
+                ICUpdateSeconImagePreview(mICItems[indexS].Img);*/
+            
+
+            
+            
+            if (distance == -1)
+                return isFinished;
+
+            ICIncrementStep(false);
+
+
             CloseSqlConnection();
 
-            Task.Factory.StartNew(() =>
+            return isFinished;
+        }
+
+        private void ICManualCompare()
+        {
+            indexF = 0;
+            indexS = 1;
+            m_ManualEbayImgExtractor = new ManualEbayImgExtractor(m_SQLiteConnection)
             {
-                Dispatcher.Invoke(() =>
-                {
-                    UpdateParserImagePrewiev(null);
-                });
-            });
+                DepotopCsvFile = TBICFirstTableFile.Text,
+                OtherCsvFile = TBICSecondTableFile.Text
+            };
+
+            m_ManualEbayImgExtractor.Initialize();
+            var depotopCount = m_ManualEbayImgExtractor.DepotopRecords.Count;
+
+            mICItems = m_ManualEbayImgExtractor.SelectAllByIndex(indexF);
+            m_ManualEbayImgExtractor.ActualizeWhithDB(ref mICItems);
+
+            SetupProgressBar(depotopCount, "Manual browsing in process...");
+
+            ICIncrement(-1);
+
+
+            // load data from all csv
+            // select first depotop item
+            // search if exists in db
+
+
+
+            // if exists - display img
+
+            // if not exists 
+            // create parser for depotop
+            // parse img
+            // diaplay img
+
+            // count other items for this depotop item
+            // each search if other item exists in db
+            // if exists - display img
+            // if not exists 
+            // create parser for others
+            // by clicking status button save comparsion result to db and switch next
+            // if items cursor reached end select next depotop
+            // 
+            //
+
+
+            var loadedlines = 0;
+
+
+
+
 
         }
 
@@ -1099,7 +1278,8 @@ namespace Depotop_MC_Tools
         {
             OpenSqlConnection(m_ICConnectionString);
             var result = 1;
-            ICNextImageInManual(result);
+            //ICNextImageInManual(result);
+            ICIncrement(result);
             TbParserStatus.Text = "Images is identical";
             CloseSqlConnection();
         }
@@ -1108,13 +1288,26 @@ namespace Depotop_MC_Tools
         {
             OpenSqlConnection(m_ICConnectionString);
             var result = 100;
-            ICNextImageInManual(result);
+            //ICNextImageInManual(result);
+            ICIncrement(result);
             TbParserStatus.Text = "Images is different";
             CloseSqlConnection();
         }
 
         private void BtnICExportManualComparsion_Click(object sender, RoutedEventArgs e)
         {
+            if (m_ManualEbayImgExtractor != null)
+            {
+                OpenSqlConnection(m_ICConnectionString);
+                m_ManualEbayImgExtractor.m_SQLiteConnection = m_SQLiteConnection;
+                m_ManualEbayImgExtractor.ExportToCsv();
+                CloseSqlConnection();
+            }
+
+
+
+
+            return;
             if (!m_ManualImageComparer.IsInitialized)
             {
                 SetupProgressBar(0, string.Format("Manual comparsion is not iniialized!", ""));
@@ -1161,7 +1354,7 @@ namespace Depotop_MC_Tools
                 m_SQLiteConnection.Close();
         }
 
-       
+
     }
 }
 

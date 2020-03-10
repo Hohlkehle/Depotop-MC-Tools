@@ -133,14 +133,18 @@ namespace Depotop_MC_Tools
 
             public override void LoadAnounceData(Parser parser)
             {
-                var htmlDoc = parser.HtmlWebInstance.LoadFromBrowser(FullUrl);
-                var img = htmlDoc.DocumentNode.SelectSingleNode(".//img[contains(@id, 'icImg')]/@src");
-                if (img != null)
+                try
                 {
-                    var src = img.Attributes.FirstOrDefault(u => u.Name == "src");
-                    var link = new EbayImageLink(src.Value);
-                    ImageLinks.Add(link);
+                    var htmlDoc = parser.HtmlWebInstance.LoadFromBrowser(FullUrl);
+                    var img = htmlDoc.DocumentNode.SelectSingleNode(".//img[contains(@id, 'icImg')]/@src");
+                    if (img != null)
+                    {
+                        var src = img.Attributes.FirstOrDefault(u => u.Name == "src");
+                        var link = new EbayImageLink(src.Value);
+                        ImageLinks.Add(link);
+                    }
                 }
+                catch (Exception) { }
             }
         }
 

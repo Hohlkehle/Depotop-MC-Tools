@@ -32,6 +32,7 @@ namespace Depotop_MC_Tools
         public EbayImgExtractor(string csvFile)
         {
             m_CsvFile = csvFile;
+            DwnList = new List<string[]>();
         }
 
         public int LoadData()
@@ -45,7 +46,8 @@ namespace Depotop_MC_Tools
                     {
                         var line = reader.ReadLine();
                         var values = line.Split(';');
-
+                        if (!Uri.IsWellFormedUriString(values[1], UriKind.Absolute))
+                            continue;
                         m_DwnList.Add(values);
                     }
                 }
@@ -105,7 +107,8 @@ namespace Depotop_MC_Tools
                 {
                     anounce
                 };
-                m_EbayParser.SearchResults.Add(model, anounces);
+                try { m_EbayParser.SearchResults.Add(url, anounces); }
+                catch (Exception) { }
             }
 
             return m_EbayParser;

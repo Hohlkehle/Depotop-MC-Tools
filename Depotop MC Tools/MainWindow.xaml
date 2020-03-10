@@ -167,14 +167,14 @@
                             <StackPanel Orientation="Vertical">
                                 <TextBlock TextWrapping="Wrap"><Run Text="Таблица с изображениями depotop"/></TextBlock>
                                 <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                    <TextBox x:Name="TBICFirstTableFile" Height="23" TextWrapping="NoWrap" Text="" Width="238"/>
+                                    <TextBox x:Name="TBICFirstTableFile" Height="23" TextWrapping="NoWrap" Text="" Width="220"/>
                                     <Button x:Name="BtnICCSelectFirstTable" Content="Выбрать" Margin="10,0,10,0" Click="BtnICCSelectFirstTable_Click"/>
                                 </StackPanel>
                             </StackPanel>
                             <StackPanel Orientation="Vertical">
                                 <TextBlock TextWrapping="Wrap" Text="Таблица с изображениями для сравнения"/>
                                 <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                    <TextBox x:Name="TBICSecondTableFile" Height="23" TextWrapping="NoWrap" Text="" Width="238"/>
+                                    <TextBox x:Name="TBICSecondTableFile" Height="23" TextWrapping="NoWrap" Text="" Width="220"/>
                                     <Button x:Name="BtnICCSelectSecondTable" Content="Выбрать" Margin="10,0,10,0" RenderTransformOrigin="0.5,0.696" Click="BtnICCSelectSecondTable_Click"/>
                                 </StackPanel>
                             </StackPanel>
@@ -231,10 +231,10 @@
                                             <CheckBox  Content="Пропускать похожие" Margin="0,0,0,0" Padding="5,0" VerticalAlignment="Center"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                            <Button x:Name="BtnICImageIsIdentical" Content="Одинаковые" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICImageIsIdentical_Click"/>
+                                            <Button x:Name="BtnICImageIsIdentical" Content="Выбрать эту" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICImageIsIdentical_Click"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
-                                            <Button  x:Name="BtnICImageIsDifferent" Content="Разные" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICImageIsDifferent_Click"/>
+                                            <Button  x:Name="BtnICImageIsDifferent" Content="Пропустить" Margin="0,5,10,5" Padding="5,2,5,2" Click="BtnICImageIsDifferent_Click"/>
                                             <Button  x:Name="BtnICExportManualComparsion" Content="Export" Margin="20,5,10,5" Padding="5,2,5,2" Click="BtnICExportManualComparsion_Click" />
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal" Margin="5,5,0,0">
